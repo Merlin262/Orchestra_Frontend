@@ -19,6 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
+      <head>
+        <link rel="icon" href="/Orchestra_logo.png" type="image/jpeg" />
+      </head>
       <body className={inter.className}>
         <Navbar />
         <main className="min-h-screen bg-gray-50">{children}</main>

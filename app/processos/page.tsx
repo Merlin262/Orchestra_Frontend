@@ -16,18 +16,18 @@ export default function ProcessosPage() {
         <h1 className="text-3xl font-bold text-gray-900">Meus Processos</h1>
         <div className="flex gap-3">
           <Link
-            href="/processos/novo"
+            href="/processos/new"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
           >
             <Plus size={18} />
             Novo Processo
           </Link>
           <Link
-            href="/processos/carregar"
+            href="/processos/importar"
             className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
           >
             <Upload size={18} />
-            Carregar Processo
+            importar Processo
           </Link>
         </div>
       </div>
@@ -42,7 +42,7 @@ export default function ProcessosPage() {
         <div className="text-center py-16 bg-gray-50 rounded-lg">
           <p className="text-gray-500 mb-4">Você ainda não tem processos criados.</p>
           <Link
-            href="/processos/novo"
+            href="/processos/new"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
           >
             <Plus size={18} />
