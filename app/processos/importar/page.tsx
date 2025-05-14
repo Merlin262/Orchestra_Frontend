@@ -1,124 +1,98 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState, useRef, useEffect } from "react";
-import { Upload, FileUp, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import BpmnViewer from "bpmn-js/lib/NavigatedViewer";
+import { useState, useRef } from "react"
+import { Upload, FileUp, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function ImportarProcessoPage() {
-  const [arquivo, setArquivo] = useState<File | null>(null);
-  const [arrastando, setArrastando] = useState(false);
-  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
-  const [mensagem, setMensagem] = useState("");
-  const [mostrarViewer, setMostrarViewer] = useState(false);
-  const [xmlContent, setXmlContent] = useState<string | null>(null);
-  const viewerRef = useRef<HTMLDivElement>(null);
-  const bpmnViewerRef = useRef<any>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const router = useRouter();
+  const [arquivo, setArquivo] = useState<File | null>(null)
+  const [arrastando, setArrastando] = useState(false)
+  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
+  const [mensagem, setMensagem] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setArrastando(true);
-  };
+    e.preventDefault()
+    setArrastando(true)
+  }
 
   const handleDragLeave = () => {
-    setArrastando(false);
-  };
+    setArrastando(false)
+  }
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setArrastando(false);
+    e.preventDefault()
+    setArrastando(false)
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
+      const file = e.dataTransfer.files[0]
       if (file.name.endsWith(".bpmn") || file.name.endsWith(".xml")) {
-        setArquivo(file);
-        setStatus("idle");
-        setMensagem("");
+        setArquivo(file)
+        setStatus("idle")
+        setMensagem("")
       } else {
-        setStatus("error");
-        setMensagem("Por favor, selecione um arquivo BPMN válido (.bpmn ou .xml)");
+        setStatus("error")
+        setMensagem("Por favor, selecione um arquivo BPMN válido (.bpmn ou .xml)")
       }
     }
-  };
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
+      const file = e.target.files[0]
       if (file.name.endsWith(".bpmn") || file.name.endsWith(".xml")) {
-        setArquivo(file);
-        setStatus("idle");
-        setMensagem("");
+        setArquivo(file)
+        setStatus("idle")
+        setMensagem("")
       } else {
-        setStatus("error");
-        setMensagem("Por favor, selecione um arquivo BPMN válido (.bpmn ou .xml)");
+        setStatus("error")
+        setMensagem("Por favor, selecione um arquivo BPMN válido (.bpmn ou .xml)")
       }
     }
-  };
+  }
 
   const handleImportar = async () => {
     if (!arquivo) return;
-
+  
     try {
       setStatus("uploading");
       setMensagem("Enviando arquivo...");
-
+  
       const formData = new FormData();
       formData.append("file", arquivo);
-      formData.append("Name", "Diagrama 1");
-
+      formData.append("Name", "Diagrama 1"); // Adicione o campo Name aqui
+  
       const response = await fetch("https://localhost:7073/api/Bpmn/upload", {
         method: "POST",
         body: formData,
       });
-
+  
       if (!response.ok) {
         throw new Error(`Erro ao enviar arquivo: ${response.status} ${response.statusText}`);
       }
-
+  
       const data = await response.json();
-      const xml = data.bpmnXml;
-
+  
       setStatus("success");
       setMensagem("Arquivo importado com sucesso!");
-      setXmlContent(xml);
-      handleVisualizar();
-
-      // setTimeout(() => {
-      //   router.push("/processos");
-      // }, 2000);
+  
+      // Redirecionar após 2 segundos
+      setTimeout(() => {
+        router.push("/processos");
+      }, 2000);
     } catch (error) {
       console.error("Erro ao enviar arquivo:", error);
       setStatus("error");
       setMensagem(error instanceof Error ? error.message : "Erro ao enviar arquivo");
     }
-  };
+  }
 
   const handleClickUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleVisualizar = () => {
-    console.log("Visualizando processo...");
-    setMostrarViewer(true);
-  };
-
-  useEffect(() => {
-    console.log("Mostrar Viewer:", mostrarViewer);
-    console.log("XML Content:", xmlContent);
-    if (mostrarViewer && xmlContent && viewerRef.current) {
-      console.log("If");
-      const bpmnViewer = new BpmnViewer({ container: viewerRef.current });
-      bpmnViewerRef.current = bpmnViewer;
-
-      bpmnViewer.importXML(xmlContent).catch((err) => {
-        console.error("Erro ao importar XML para o BPMN viewer:", err);
-      });
-    }
-  }, [mostrarViewer, xmlContent]);
+    fileInputRef.current?.click()
+  }
 
   return (
     <div className="container mx-auto p-6">
@@ -129,10 +103,10 @@ export default function ImportarProcessoPage() {
           arrastando
             ? "border-blue-500 bg-blue-50"
             : status === "success"
-            ? "border-green-500 bg-green-50"
-            : status === "error"
-            ? "border-red-500 bg-red-50"
-            : "border-gray-300"
+              ? "border-green-500 bg-green-50"
+              : status === "error"
+                ? "border-red-500 bg-red-50"
+                : "border-gray-300"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -172,7 +146,9 @@ export default function ImportarProcessoPage() {
           )}
 
           {status === "error" && <p className="text-sm text-red-500">{mensagem}</p>}
+
           {status === "success" && <p className="text-sm text-green-500">{mensagem}</p>}
+
           {status === "uploading" && <p className="text-sm text-blue-500">{mensagem}</p>}
 
           {!arquivo && status !== "uploading" && (
@@ -205,9 +181,9 @@ export default function ImportarProcessoPage() {
               </button>
               <button
                 onClick={() => {
-                  setArquivo(null);
-                  setStatus("idle");
-                  setMensagem("");
+                  setArquivo(null)
+                  setStatus("idle")
+                  setMensagem("")
                 }}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
               >
@@ -218,24 +194,6 @@ export default function ImportarProcessoPage() {
         </div>
       </div>
 
-      {xmlContent && (
-        <div className="mt-6">
-          <button
-            onClick={handleVisualizar}
-            className="bg-gray-800 text-white py-2 px-4 rounded hover:bg-gray-700"
-          >
-            Visualizar Processo
-          </button>
-        </div>
-      )}
-
-      {mostrarViewer && (
-        <div className="mt-8 border rounded p-4">
-          <h2 className="text-xl font-semibold mb-4">Visualização do Processo</h2>
-          <div ref={viewerRef} className="h-[500px] border" />
-        </div>
-      )}
-
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Informações Importantes</h2>
         <ul className="list-disc list-inside text-gray-600 space-y-2">
@@ -245,5 +203,5 @@ export default function ImportarProcessoPage() {
         </ul>
       </div>
     </div>
-  );
+  )
 }
