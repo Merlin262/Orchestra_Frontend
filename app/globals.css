@@ -103,3 +103,35 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+.highlight-green .djs-visual > :nth-child(1) {
+  fill: #d1fae5 !important;  /* verde claro */
+  stroke: #10b981 !important; /* verde escuro */
+}
+
+.highlight-red .djs-visual > :nth-child(1) {
+  fill: #fee2e2 !important;
+  stroke: #ef4444 !important;
+}
+
+.highlight-blue .djs-visual > :nth-child(1) {
+  fill: #e0f2fe !important;
+  stroke: #3b82f6 !important;
+}
+
+.highlight-yellow .djs-visual > :nth-child(1) {
+  fill: #fef9c3 !important;
+  stroke: #facc15 !important;
+}
+
+
+/* para tentar tirar a cor do elemento */
+.djs-hit,
+.djs-hit-all {
+  fill: none !important;
+  stroke: none !important;
+  stroke-opacity: 0 !important;
+}
+
+
