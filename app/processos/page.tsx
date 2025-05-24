@@ -1,15 +1,35 @@
+"use client"
+
 import Link from "next/link"
 import { Plus, Upload } from "lucide-react"
 import ProcessCard from "@/components/process-card"
+import { useEffect, useState } from "react"
 
-// Dados de exemplo para processos
-const processos = [
-  { id: "1", nome: "Processo de Vendas", dataCriacao: "2023-10-15", ultimaModificacao: "2023-11-01" },
-  { id: "2", nome: "Onboarding de Clientes", dataCriacao: "2023-09-22", ultimaModificacao: "2023-10-28" },
-  { id: "3", nome: "Aprovação de Despesas", dataCriacao: "2023-11-05", ultimaModificacao: "2023-11-05" },
-]
+type Processo = {
+  id: string
+  name: string
+  createdAt: string
+  lastUpdate: string
+  CreatedBy: string
+}
 
 export default function ProcessosPage() {
+  const [processos, setProcessos] = useState<Processo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch("https://localhost:7073/api/Bpmn")
+      .then(async (res) => {
+        console.log(res)
+        if (!res.ok) throw new Error("Erro ao buscar processos")
+        return res.json()
+      })
+      .then(setProcessos)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
@@ -32,7 +52,11 @@ export default function ProcessosPage() {
         </div>
       </div>
 
-      {processos.length > 0 ? (
+      {loading ? (
+        <div className="text-center py-16">Carregando...</div>
+      ) : error ? (
+        <div className="text-center py-16 text-red-500">{error}</div>
+      ) : processos.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {processos.map((processo) => (
             <ProcessCard key={processo.id} processo={processo} />
