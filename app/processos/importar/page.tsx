@@ -63,7 +63,7 @@ export default function ImportarProcessoPage() {
   
       const formData = new FormData();
       formData.append("file", arquivo);
-      formData.append("Name", "Diagrama 1"); // Adicione o campo Name aqui
+      //formData.append("Name", "Diagrama 1");
   
       const response = await fetch("https://localhost:7073/api/Bpmn/upload", {
         method: "POST",

@@ -10,6 +10,7 @@ import TaskDetailsPanel from "@/components/task-details-panel"
 import BpmnTaskList from "@/components/bpmn-task-list"
 import { ArrowLeft, Edit, FileText, ListChecks, Users, Info } from "lucide-react"
 import Link from "next/link"
+import AddUserModal from "@/components/add-user-modal"
 
 type Processo = {
   id: string
@@ -140,6 +141,24 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
   const [isEditing, setIsEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [showAddUserModal, setShowAddUserModal] = useState(false)
+  const [selectedEtapa, setSelectedEtapa] = useState<{ id: string, nome: string } | null>(null)
+
+  const etapas = tasks.map(task => ({
+    id: task.id,
+    nome: task.name,
+    responsaveis: task.assignee ? [task.assignee] : [],
+  }))
+
+  const handleTaskClick = (taskId: string, taskName: string) => {
+    setSelectedEtapa({ id: taskId, nome: taskName })
+    setShowAddUserModal(true)
+  }
+
+  const handleAddUser = (etapaId: string, userId: string, papel: string) => {
+    // Sua lógica para adicionar usuário à etapa
+    // Exemplo: console.log(etapaId, userId, papel)
+  }
 
   useEffect(() => {
     setLoading(true)
@@ -298,7 +317,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
 
           <div className="flex-1 min-h-0">
             {activeTab === "diagrama" && !isEditing && (
-              <BpmnViewer xml={processo.xml} />
+              <BpmnViewer xml={processo.xml} onTaskClick={handleTaskClick} />
             )}
 
             {activeTab === "diagrama" && isEditing && (
@@ -316,6 +335,12 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
           </div>
         </div>
       </div>
+      <AddUserModal
+        isOpen={showAddUserModal}
+        onClose={() => setShowAddUserModal(false)}
+        etapas={selectedEtapa ? [selectedEtapa] : etapas}
+        onAddUser={handleAddUser}
+      />
     </div>
   )
 }

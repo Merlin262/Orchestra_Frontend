@@ -46,13 +46,15 @@ export default function ProcessDetails({ processo }: ProcessDetailsProps) {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Última atualização</h3>
-          <div className="flex items-center gap-2">
-            <Clock size={16} className="text-gray-400" />
-            <p className="text-gray-900">{formatarData(processo.lastUpdate)}</p>
+        {processo.lastUpdate && (
+          <div>
+            <h3 className="text-sm font-medium text-gray-500 mb-1">Última atualização</h3>
+            <div className="flex items-center gap-2">
+              <Clock size={16} className="text-gray-400" />
+              <p className="text-gray-900">{formatarData(processo.lastUpdate)}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <div className="p-5 border-t border-gray-200 bg-gray-50">

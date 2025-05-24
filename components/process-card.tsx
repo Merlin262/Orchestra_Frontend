@@ -1,36 +1,92 @@
 "use client"
 
 import Link from "next/link"
-import { FileEdit, Trash2, Calendar, Eye } from "lucide-react"
+import { FileEdit, Trash2, Calendar, Eye, BookOpen, Play, Copy } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 
 interface Processo {
   id: string
   name: string
   createdAt: string
   lastUpdate: string
-  CreatedBy: string
+  tipo?: "baseline" | "instancia"
+  versao?: string
+  autor?: string
+  baselineId?: string
+  status?: string
+  responsavel?: string
 }
 
 interface ProcessCardProps {
   processo: Processo
+  onDelete?: (id: string) => void
 }
 
 export default function ProcessCard({ processo }: ProcessCardProps) {
-  console.log(processo)
   const formatarData = (dataString: string) => {
     const data = new Date(dataString)
-    console.log(data)
     return data.toLocaleDateString("pt-BR")
   }
 
-  return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
-      <div className="p-5">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">{processo.name}</h3>
+  const isBaseline = processo.tipo === "baseline" || !processo.tipo
 
-        <div className="flex items-center text-sm text-gray-500 mb-4">
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+      <div className="p-5">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{processo.name}</h3>
+          <Badge
+            variant="outline"
+            className={`${
+              isBaseline
+                ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
+                : "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
+            }`}
+          >
+            {isBaseline ? (
+              <>
+                <BookOpen size={14} className="mr-1" /> Baseline
+              </>
+            ) : (
+              <>
+                <Play size={14} className="mr-1" /> Instância
+              </>
+            )}
+          </Badge>
+        </div>
+
+        <div className="flex items-center text-sm text-gray-500 mb-3">
           <Calendar size={16} className="mr-1" />
-          <span>Modificado em {formatarData(processo.lastUpdate)}</span>
+          {processo.lastUpdate
+            ? <span>Modificado em {formatarData(processo.lastUpdate)}</span>
+            : <span>Criado em {formatarData(processo.createdAt)}</span>
+          }
+        </div>
+
+        <div className="mb-4 text-sm">
+          {isBaseline && processo.versao && (
+            <div className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Versão:</span> {processo.versao}
+            </div>
+          )}
+
+          {isBaseline && processo.autor && (
+            <div className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Autor:</span> {processo.autor}
+            </div>
+          )}
+
+          {!isBaseline && processo.status && (
+            <div className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Status:</span> {processo.status}
+            </div>
+          )}
+
+          {!isBaseline && processo.responsavel && (
+            <div className="text-gray-600 dark:text-gray-300">
+              <span className="font-medium">Responsável:</span> {processo.responsavel}
+            </div>
+          )}
         </div>
 
         <div className="flex justify-between mt-4">
@@ -50,16 +106,53 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
               <Eye size={16} />
               Visualizar
             </Link>
+
+            {isBaseline && (
+              <button
+                className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium text-sm"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`https://localhost:7073/api/BpmnProcessInstances/CreateFromBaseline/${processo.id}`, {
+                      method: "POST",
+                    });
+                    if (res.ok) {
+                      alert("Instância de processo criada com sucesso!");
+                      window.location.reload();
+                    } else {
+                      const msg = await res.text();
+                      alert("Erro ao criar instância de processo: " + msg);
+                    }
+                  } catch (error) {
+                    alert("Erro ao criar instância de processo.");
+                  }
+                }}
+                type="button"
+              >
+                <Copy size={16} />
+                Criar Instância
+              </button>
+            )}
           </div>
 
           <button
             className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-medium text-sm"
-            onClick={() => confirm("Tem certeza que deseja excluir este processo?")}
+            onClick={async () => {
+              if (confirm("Tem certeza que deseja excluir este processo?")) {
+                const res = await fetch(`https://localhost:7073/api/bpmn/${processo.id}`, {
+                  method: "DELETE",
+                });
+                if (res.ok) {
+                  window.location.reload();
+                } else {
+                  alert("Erro ao excluir o processo.");
+                }
+              }
+            }}
           >
             <Trash2 size={16} />
             Excluir
           </button>
-      </div>
+        </div>
     </div>
   </div>
   )

@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import BpmnAvatarOverlay from './BpmnAvatarOverlay'
-import BpmnJsViewer from "bpmn-js/lib/NavigatedViewer"
+import BpmnAvatarOverlay from "./BpmnAvatarOverlay"
+import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
 
 interface BpmnViewerProps {
   xml: string
+  onTaskClick?: (taskId: string, taskName: string) => void
 }
 
-export default function BpmnViewer({ xml }: BpmnViewerProps) {
+export default function BpmnViewer({ xml, onTaskClick }: BpmnViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -18,15 +19,13 @@ export default function BpmnViewer({ xml }: BpmnViewerProps) {
 
     const initViewer = async () => {
       try {
-        const BpmnJS = (await import("bpmn-js")).default
-
         if (viewerRef.current) {
           viewerRef.current.destroy()
           viewerRef.current = null
         }
 
         if (containerRef.current) {
-          viewerRef.current = new BpmnJS({
+          viewerRef.current = new NavigatedViewer({
             container: containerRef.current,
             height: "100%",
             width: "100%",
@@ -37,13 +36,12 @@ export default function BpmnViewer({ xml }: BpmnViewerProps) {
             const canvas = viewerRef.current.get("canvas")
             const elementRegistry = viewerRef.current.get("elementRegistry")
 
-            // Aplica zoom para ajustar à viewport
+            // Ajustar o diagrama para caber na tela inicialmente
             canvas.zoom("fit-viewport", "auto")
 
-            // Estilos customizados por tipo de elemento
+            // Estilização por tipo de elemento
             elementRegistry.getAll().forEach((element: any) => {
               const type = element?.businessObject?.$type
-
               switch (type) {
                 case "bpmn:StartEvent":
                   canvas.addMarker(element.id, "highlight-green")
@@ -60,13 +58,23 @@ export default function BpmnViewer({ xml }: BpmnViewerProps) {
               }
             })
 
+            // Lidar com clique nas tarefas
+            if (onTaskClick) {
+              viewerRef.current.get("eventBus").on("element.click", function (e: any) {
+                const bo = e.element?.businessObject
+                if (bo && bo.$type === "bpmn:Task") {
+                  onTaskClick(bo.id, bo.name || "")
+                }
+              })
+            }
+
             if (isMounted) setIsLoaded(true)
           } catch (err) {
             console.error("Erro ao importar XML:", err)
           }
         }
       } catch (err) {
-        console.error("Erro ao carregar a biblioteca bpmn-js:", err)
+        console.error("Erro ao inicializar o viewer BPMN:", err)
       }
     }
 
@@ -84,8 +92,10 @@ export default function BpmnViewer({ xml }: BpmnViewerProps) {
 
   return (
     <div className="relative w-full h-full">
+      {/* Container do Diagrama */}
       <div ref={containerRef} className="w-full h-full" />
 
+      {/* Overlay com Avatar */}
       {isLoaded && viewerRef.current && (
         <BpmnAvatarOverlay
           modeler={viewerRef.current}
@@ -94,6 +104,7 @@ export default function BpmnViewer({ xml }: BpmnViewerProps) {
         />
       )}
 
+      {/* Loading Spinner */}
       {!isLoaded && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
