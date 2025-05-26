@@ -96,17 +96,17 @@ export default function ImportarProcessoPage() {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Importar Processo BPMN</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">Importar Processo BPMN</h1>
 
       <div
-        className={`border-2 border-dashed rounded-lg p-12 text-center ${
+        className={`border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
           arrastando
-            ? "border-blue-500 bg-blue-50"
+            ? "border-blue-500 bg-blue-50 dark:bg-blue-900"
             : status === "success"
-              ? "border-green-500 bg-green-50"
+              ? "border-green-500 bg-green-50 dark:bg-green-900"
               : status === "error"
-                ? "border-red-500 bg-red-50"
-                : "border-gray-300"
+                ? "border-red-500 bg-red-50 dark:bg-red-900"
+                : "border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
         }`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -114,46 +114,46 @@ export default function ImportarProcessoPage() {
       >
         <div className="flex flex-col items-center justify-center space-y-4">
           {status === "idle" && (
-            <div className="p-3 bg-gray-100 rounded-full">
-              <Upload size={36} className="text-gray-500" />
+            <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-full">
+              <Upload size={36} className="text-gray-500 dark:text-gray-400" />
             </div>
           )}
 
           {status === "uploading" && (
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Loader2 size={36} className="text-blue-500 animate-spin" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+              <Loader2 size={36} className="text-blue-500 dark:text-blue-400 animate-spin" />
             </div>
           )}
 
           {status === "success" && (
-            <div className="p-3 bg-green-100 rounded-full">
-              <CheckCircle size={36} className="text-green-500" />
+            <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+              <CheckCircle size={36} className="text-green-500 dark:text-green-300" />
             </div>
           )}
 
           {status === "error" && (
-            <div className="p-3 bg-red-100 rounded-full">
-              <AlertCircle size={36} className="text-red-500" />
+            <div className="p-3 bg-red-100 dark:bg-red-900 rounded-full">
+              <AlertCircle size={36} className="text-red-500 dark:text-red-300" />
             </div>
           )}
 
-          <h3 className="text-lg font-medium text-gray-700">
+          <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200">
             {arquivo && status !== "error" ? arquivo.name : "Arraste e solte seu arquivo BPMN aqui"}
           </h3>
 
           {arquivo && status !== "error" && (
-            <p className="text-sm text-gray-500">{`${(arquivo.size / 1024).toFixed(2)} KB`}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{`${(arquivo.size / 1024).toFixed(2)} KB`}</p>
           )}
 
-          {status === "error" && <p className="text-sm text-red-500">{mensagem}</p>}
+          {status === "error" && <p className="text-sm text-red-500 dark:text-red-300">{mensagem}</p>}
 
-          {status === "success" && <p className="text-sm text-green-500">{mensagem}</p>}
+          {status === "success" && <p className="text-sm text-green-500 dark:text-green-300">{mensagem}</p>}
 
-          {status === "uploading" && <p className="text-sm text-blue-500">{mensagem}</p>}
+          {status === "uploading" && <p className="text-sm text-blue-500 dark:text-blue-400">{mensagem}</p>}
 
           {!arquivo && status !== "uploading" && (
             <>
-              <p className="text-sm text-gray-500">ou</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">ou</p>
               <button
                 onClick={handleClickUpload}
                 className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
@@ -185,7 +185,7 @@ export default function ImportarProcessoPage() {
                   setStatus("idle")
                   setMensagem("")
                 }}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
+                className="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 rounded-md transition-colors"
               >
                 Cancelar
               </button>
@@ -195,8 +195,8 @@ export default function ImportarProcessoPage() {
       </div>
 
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Informações Importantes</h2>
-        <ul className="list-disc list-inside text-gray-600 space-y-2">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Informações Importantes</h2>
+        <ul className="list-disc list-inside text-gray-600 dark:text-gray-400 space-y-2">
           <li>Formatos suportados: BPMN (.bpmn) e XML (.xml) contendo definições BPMN</li>
           <li>Tamanho máximo do arquivo: 10MB</li>
           <li>O processo importado estará disponível na sua lista de processos após o upload</li>

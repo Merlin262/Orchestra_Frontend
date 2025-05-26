@@ -204,7 +204,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
             <ArrowLeft size={18} />
             Voltar
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{processo.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{processo.name}</h1>
         </div>
         {!isEditing ? (
           <button
@@ -224,28 +224,36 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
         <div className="lg:col-span-1 flex flex-col gap-6">
           <ProcessDetails processo={processo} />
 
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-900">Tarefas do Processo</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tarefas do Processo</h2>
             </div>
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
               {tasks.map((task) => (
                 <li
                   key={task.id}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${selectedTaskId === task.id ? "bg-blue-50" : ""}`}
+                  className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
+                    selectedTaskId === task.id ? "bg-blue-50 dark:bg-blue-900" : ""
+                  }`}
                   onClick={() => handleTaskSelect(task.id)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div
-                        className={`w-3 h-3 rounded-full ${task.details.progress >= 100 ? "bg-green-500" : task.details.progress > 0 ? "bg-blue-500" : "bg-gray-300"} mr-3`}
+                        className={`w-3 h-3 rounded-full ${
+                          task.details.progress >= 100
+                            ? "bg-green-500"
+                            : task.details.progress > 0
+                            ? "bg-blue-500"
+                            : "bg-gray-300 dark:bg-gray-700"
+                        } mr-3`}
                       ></div>
-                      <span className="font-medium text-gray-900">{task.name}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">{task.name}</span>
                     </div>
-                    <div className="text-sm text-gray-500">{task.details.progress}%</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">{task.details.progress}%</div>
                   </div>
                   {task.assignee && (
-                    <div className="mt-2 flex items-center text-sm text-gray-500">
+                    <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
                       <div className="relative w-5 h-5 rounded-full overflow-hidden mr-2">
                         <img
                           src={task.assignee.photoUrl || "/placeholder.svg"}
@@ -253,7 +261,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                           className="object-cover w-full h-full"
                         />
                       </div>
-                      <span>{task.assignee.name}</span>
+                      <span className="dark:text-gray-200">{task.assignee.name}</span>
                     </div>
                   )}
                 </li>
@@ -263,15 +271,15 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
         </div>
 
         {/* Coluna da direita: Diagrama e abas */}
-        <div className="lg:col-span-3 bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden h-full min-h-0 flex flex-col">
-          <div className="border-b border-gray-200">
+        <div className="lg:col-span-3 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full min-h-0 flex flex-col">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex">
               <button
                 onClick={() => setActiveTab("diagrama")}
                 className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                   activeTab === "diagrama"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 <FileText size={16} />
@@ -281,8 +289,8 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                 onClick={() => setActiveTab("tarefas")}
                 className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                   activeTab === "tarefas"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 <ListChecks size={16} />
@@ -292,8 +300,8 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                 onClick={() => setActiveTab("acompanhamento")}
                 className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                   activeTab === "acompanhamento"
-                    ? "border-b-2 border-blue-600 text-blue-600"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >
                 <Users size={16} />
@@ -304,8 +312,8 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                   onClick={() => setActiveTab("detalhes")}
                   className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                     activeTab === "detalhes"
-                      ? "border-b-2 border-blue-600 text-blue-600"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
+                      : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
                 >
                   <Info size={16} />

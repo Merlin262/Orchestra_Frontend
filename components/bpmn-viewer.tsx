@@ -13,7 +13,7 @@ export default function BpmnViewer({ xml, onTaskClick }: BpmnViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewerRef = useRef<any>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-
+  
   useEffect(() => {
     let isMounted = true
 
