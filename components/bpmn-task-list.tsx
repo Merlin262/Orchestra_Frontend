@@ -110,22 +110,25 @@ export default function BpmnTaskList({ xml }: BpmnTaskListProps) {
 
   return (
     <div className="overflow-y-auto max-h-[500px]">
-      <ul className="divide-y divide-gray-200">
-        {tasks.map((task) => (
-          <li key={task.id} className="p-4 hover:bg-gray-50">
-            <div className="flex items-start">
-              <div className="flex-shrink-0 pt-1">
-                <Circle size={18} className="text-blue-500" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{task.name}</p>
-                <p className="text-xs text-gray-500 mt-1">Tipo: {task.type}</p>
-                <p className="text-xs text-gray-500">ID: {task.id}</p>
-              </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+    {tasks.map((task) => (
+      <li
+        key={task.id}
+        className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+      >
+        <div className="flex items-start">
+          <div className="flex-shrink-0 pt-1">
+            <Circle size={18} className="text-blue-500" />
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.name}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tipo: {task.type}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">ID: {task.id}</p>
+          </div>
+        </div>
+      </li>
+    ))}
+  </ul>
+</div>
   )
 }

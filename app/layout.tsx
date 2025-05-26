@@ -3,13 +3,15 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/navbar"
+//import SidebarColaborador from "@/components/sidebar-colaborador"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ProfileProvider } from "@/components/profile-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Orchestra",
   description: "Aplicação para modelagem de processos BPMN",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -18,13 +20,22 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/Orchestra_logo.png" type="image/jpeg" />
       </head>
       <body className={inter.className}>
-        <Navbar />
-        <main className="min-h-screen bg-gray-50">{children}</main>
+        <ThemeProvider>
+          <ProfileProvider>
+            <div className="min-h-screen bg-background text-foreground">
+              <Navbar />
+              <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+                {/* <SidebarColaborador /> */}
+                <main className="flex-1 p-4">{children}</main>
+              </div>
+            </div>
+          </ProfileProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

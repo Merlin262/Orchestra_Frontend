@@ -8,21 +8,6 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: #f9fafb;
-}
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-}
-
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -31,19 +16,19 @@ body {
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -59,39 +44,60 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 0 0% 3%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 9%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
+    --muted: 0 0% 7%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --accent: 0 0% 9%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --ring: 224.3 76.3% 55%;
+    --chart-1: 220 70% 60%;
+    --chart-2: 160 60% 55%;
+    --chart-3: 30 80% 65%;
+    --chart-4: 280 65% 70%;
+    --chart-5: 340 75% 65%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 95.9%;
+    --sidebar-primary: 224.3 76.3% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 9%;
+    --sidebar-accent-foreground: 0 0% 95.9%;
+    --sidebar-border: 0 0% 14.9%;
+    --sidebar-ring: 217.2 91.2% 65%;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: #f9fafb;
+}
+
+.dark body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
   }
 }
 
@@ -102,6 +108,320 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Estilos específicos para o bpmn-js */
+.djs-palette {
+  background-color: white !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .djs-palette {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.djs-palette .entry {
+  color: #4b5563 !important;
+}
+
+.dark .djs-palette .entry {
+  color: hsl(var(--foreground)) !important;
+}
+
+.djs-palette .entry:hover {
+  color: #1d4ed8 !important;
+}
+
+.dark .djs-palette .entry:hover {
+  color: hsl(var(--primary)) !important;
+}
+
+.djs-context-pad {
+  background-color: white !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .djs-context-pad {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.djs-popup {
+  background-color: white !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .djs-popup {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.djs-popup-body {
+  background-color: white !important;
+}
+
+.dark .djs-popup-body {
+  background-color: hsl(var(--card)) !important;
+}
+
+.djs-popup-header {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .djs-popup-header {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.bpp-properties-panel {
+  background-color: white !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-properties-panel {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.bpp-properties-header {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-properties-header {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.bpp-properties-tab-bar {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-properties-tab-bar {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.bpp-properties-tab {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-properties-tab {
+  background-color: hsl(var(--muted)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.bpp-properties-tab.bpp-active {
+  background-color: white !important;
+  border-color: #e5e7eb !important;
+  color: #2563eb !important;
+}
+
+.dark .bpp-properties-tab.bpp-active {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--primary)) !important;
+}
+
+.bpp-field-description {
+  color: #6b7280 !important;
+}
+
+.dark .bpp-field-description {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.bpp-textfield,
+.bpp-textbox {
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-textfield,
+.dark .bpp-textbox {
+  border-color: hsl(var(--border)) !important;
+  background-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.bpp-textfield:focus,
+.bpp-textbox:focus {
+  border-color: #2563eb !important;
+}
+
+.dark .bpp-textfield:focus,
+.dark .bpp-textbox:focus {
+  border-color: hsl(var(--ring)) !important;
+}
+
+.bpp-select {
+  border-color: #e5e7eb !important;
+}
+
+.dark .bpp-select {
+  border-color: hsl(var(--border)) !important;
+  background-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.bpp-select:focus {
+  border-color: #2563eb !important;
+}
+
+.dark .bpp-select:focus {
+  border-color: hsl(var(--ring)) !important;
+}
+
+.bpp-button {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+  color: #4b5563 !important;
+}
+
+.dark .bpp-button {
+  background-color: hsl(var(--secondary)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+}
+
+.bpp-button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.dark .bpp-button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.bpp-button.primary {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.dark .bpp-button.primary {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+.bpp-button.primary:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.dark .bpp-button.primary:hover {
+  background-color: hsl(var(--primary) / 0.9) !important;
+}
+
+/* Estilos específicos para o editor BPMN no tema escuro */
+.dark .bpmn-container {
+  background-color: hsl(var(--background)) !important;
+}
+
+.dark .bpmn-properties-panel {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .bpmn-canvas {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .djs-container {
+  background-color: hsl(var(--muted)) !important;
+}
+
+.dark .djs-element {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .djs-shape {
+  fill: hsl(var(--card)) !important;
+  stroke: hsl(var(--border)) !important;
+}
+
+.dark .djs-connection {
+  stroke: hsl(var(--foreground)) !important;
+}
+
+.dark .djs-connection-marker {
+  fill: hsl(var(--foreground)) !important;
+}
+
+.dark .djs-overlay {
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .bpmn-toolbar {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .bpmn-toolbar button {
+  background-color: hsl(var(--secondary)) !important;
+  color: hsl(var(--secondary-foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+
+.dark .bpmn-toolbar button:hover {
+  background-color: hsl(var(--accent)) !important;
+}
+
+.dark .bpmn-toolbar button.active {
+  background-color: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+}
+
+/* Tema escuro básico para o container do viewer */
+.bpmn-dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Corrige o fundo interno do canvas */
+.bjs-container svg {
+  background-color: #1e1e1e;
+}
+
+/* Ajusta a cor do texto dos elementos (labels) */
+.djs-label {
+  fill: #ffffff !important;
+  font-weight: 500;
+}
+
+/* Personaliza a borda dos elementos */
+.djs-element .djs-visual > :not(.djs-label) {
+  stroke: #ccc !important;
+}
+
+/* Linhas de conexão mais claras */
+.djs-connection path {
+  stroke: #999 !important;
+}
+
+/* Marcadores coloridos */
+.highlight-green .djs-visual ellipse,
+.highlight-green .djs-visual circle {
+  stroke: #00ff88 !important;
+  stroke-width: 3px !important;
+}
+
+.highlight-blue .djs-visual rect {
+  stroke: #4faaff !important;
+  stroke-width: 3px !important;
+}
+
+.highlight-red .djs-visual circle {
+  stroke: #ff4d4d !important;
+  stroke-width: 3px !important;
+}
+
+.highlight-yellow .djs-visual polygon {
+  stroke: #ffd700 !important;
+  stroke-width: 3px !important;
 }
 
 
@@ -125,6 +445,15 @@ body {
   stroke: #facc15 !important;
 }
 
+/* Cor do texto dos labels do BPMN conforme o tema */
+.djs-label {
+  fill: #111827 !important;
+}
+
+.dark .djs-label {
+  fill: #ffffff !important;
+}
+
 
 /* para tentar tirar a cor do elemento */
 .djs-hit,
@@ -134,4 +463,41 @@ body {
   stroke-opacity: 0 !important;
 }
 
+/* Adiciona efeito de destaque ao passar o mouse sobre elementos do BPMN */
+.djs-element:hover .djs-visual > :nth-child(1) {
+  filter: brightness(1.08) drop-shadow(0 0 6px #2563eb55);
+  stroke-width: 4px !important;
+  stroke: #2563eb !important;
+  transition: filter 0.2s, stroke 0.2s, stroke-width 0.2s;
+}
 
+.dark .djs-element:hover .djs-visual > :nth-child(1) {
+  filter: brightness(1.15) drop-shadow(0 0 8px #3b82f6aa);
+  stroke: #3b82f6 !important;
+}
+
+/* Suaviza a transição para todos os elementos BPMN */
+.djs-visual > :nth-child(1) {
+  transition: filter 0.2s, stroke 0.2s, stroke-width 0.2s;
+}
+
+/* Barra de rolagem escura no modo dark */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  background: #1f2937; /* bg-gray-900 */
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #374151; /* bg-gray-800 */
+  border-radius: 8px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4b5563; /* bg-gray-700 */
+}
+
+/* Firefox */
+.dark * {
+  scrollbar-color: #374151 #1f2937;
+  scrollbar-width: thin;
+}
