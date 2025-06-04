@@ -10,6 +10,25 @@ const config: Config = {
   ],
   theme: {
   	extend: {
+		transitionProperty: {
+      'transform-opacity': 'transform, opacity',
+		},
+		keyframes: {
+		// ...existing keyframes...
+		expand: {
+			'0%': { transform: 'scale(0.95)', opacity: '0' },
+			'100%': { transform: 'scale(1)', opacity: '1' },
+		},
+		collapse: {
+			'0%': { transform: 'scale(1)', opacity: '1' },
+			'100%': { transform: 'scale(0.95)', opacity: '0' },
+		},
+		},
+		animation: {
+		// ...existing animations...
+		'expand': 'expand 300ms ease-out forwards',
+		'collapse': 'collapse 200ms ease-in forwards',
+		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',

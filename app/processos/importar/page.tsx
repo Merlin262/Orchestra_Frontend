@@ -5,6 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Upload, FileUp, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useProfile } from "@/components/profile-context"
 
 export default function ImportarProcessoPage() {
   const [arquivo, setArquivo] = useState<File | null>(null)
@@ -13,6 +14,7 @@ export default function ImportarProcessoPage() {
   const [mensagem, setMensagem] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+  const { profile } = useProfile()
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -63,7 +65,7 @@ export default function ImportarProcessoPage() {
   
       const formData = new FormData();
       formData.append("file", arquivo);
-      //formData.append("Name", "Diagrama 1");
+      formData.append("userId", profile.Id);
   
       const response = await fetch("https://localhost:7073/api/Bpmn/upload", {
         method: "POST",

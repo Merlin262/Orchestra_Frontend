@@ -5,65 +5,19 @@ import { Plus, Upload, BookOpen, Play } from "lucide-react"
 import ProcessCard from "@/components/process-card"
 import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useProfile } from "@/components/profile-context"
 
 type Processo = {
   id: string
   name: string
   createdAt: string
   lastUpdate: string
-  CreatedBy: string
+  fullName: string
   type?: "instancia" | "baseline"
   baselineId?: string
   status?: string
   versao: "1.0"
 }
-
-// Dados de exemplo para instâncias de processos
-// const instanciasProcessos = [
-//   {
-//     id: "101",
-//     name: "Venda - Cliente XYZ",
-//     createdAt: "2023-11-10",
-//     lastUpdate: "2023-11-12",
-//     type: "instancia",
-//     baselineId: "1",
-//     status: "Em andamento",
-//     CreatedBy: "Juliana Costa",
-//     versao: "1.0",
-//   },
-//   {
-//     id: "102",
-//     name: "Onboarding - Empresa ABC",
-//     createdAt: "2023-11-08",
-//     lastUpdate: "2023-11-11",
-//     type: "instancia",
-//     baselineId: "2",
-//     status: "Iniciado",
-//     CreatedBy: "Marcos Pereira",
-//     versao: "1.0",
-//   },
-//   {
-//     id: "103",
-//     name: "Despesas - Departamento TI",
-//     createdAt: "2023-11-15",
-//     lastUpdate: "2023-11-15",
-//     type: "instancia",
-//     baselineId: "3",
-//     status: "Pendente",
-//     CreatedBy: "Fernanda Santos",
-//   },
-//   {
-//     id: "104",
-//     name: "Venda - Cliente ABC",
-//     createdAt: "2023-11-14",
-//     lastUpdate: "2023-11-16",
-//     type: "instancia",
-//     baselineId: "1",
-//     status: "Em andamento",
-//     CreatedBy: "Ricardo Oliveira",
-//   },
-// ]
-
 
 export default function ProcessosPage() {
   const [baselinesProcessos, setProcessos] = useState<Processo[]>([])
@@ -72,18 +26,21 @@ export default function ProcessosPage() {
   const [errorInstancias, setErrorInstancias] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { profile } = useProfile()
 
   useEffect(() => {
-    fetch("https://localhost:7073/api/Bpmn")
+    if (!profile?.Id) return
+
+    setLoading(true)
+    fetch(`https://localhost:7073/api/Bpmn/by-user/${profile.Id}`)
       .then(async (res) => {
-        console.log(res)
         if (!res.ok) throw new Error("Erro ao buscar processos")
         return res.json()
       })
       .then(setProcessos)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [profile])
 
   useEffect(() => {
   fetch("https://localhost:7073/api/BpmnProcessInstances")
@@ -111,18 +68,19 @@ export default function ProcessosPage() {
         <h1 className="text-3xl font-bold text-gray-900">Meus Processos</h1>
         <div className="flex gap-3">
           <Link
-            href="/processos/new"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            <Plus size={18} />
-            Novo Processo
-          </Link>
-          <Link
             href="/processos/importar"
             className="inline-flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors"
           >
             <Upload size={18} />
             importar Processo
+          </Link>
+          {/* Botão para tela de versões */}
+          <Link
+            href="/processos/versions"
+            className="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            <BookOpen size={18} />
+            Versões de Processos
           </Link>
         </div>
       </div>

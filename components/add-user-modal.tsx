@@ -24,6 +24,8 @@ interface AddUserModalProps {
   onClose: () => void
   etapas: Etapa[]
   onAddUser: (etapaId: string, userId: string, papel: string) => void
+  pools?: string[]
+  processInstanceId: string
 }
 
 // Papéis disponíveis para atribuição
@@ -35,7 +37,7 @@ const papeisDisponiveis = [
   { id: "observador", nome: "Observador" },
 ]
 
-export default function AddUserModal({ isOpen, onClose, etapas, onAddUser }: AddUserModalProps) {
+export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools, processInstanceId }: AddUserModalProps) {
   const [usuariosDisponiveis, setUsuariosDisponiveis] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedEtapa, setSelectedEtapa] = useState<string>("")
@@ -43,16 +45,98 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser }: Add
   const [selectedPapel, setSelectedPapel] = useState<string>("responsavel")
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [errors, setErrors] = useState<{ etapa?: string; usuario?: string }>({})
+  const [responsaveisPorTask, setResponsaveisPorTask] = useState<Record<string, string>>({})
+
+  console.log("selectedUser:", selectedUser, "usuariosDisponiveis:", usuariosDisponiveis);
 
   // Buscar usuários da API ao abrir o modal
   useEffect(() => {
-    if (isOpen) {
-      fetch("https://localhost:7073/api/users") 
+    if (isOpen && pools && pools.length > 0) {
+      const params = pools.map(pool => `groupNames=${encodeURIComponent(pool)}`).join("&")
+      fetch(`https://localhost:7073/api/users/ByGroups?${params}`)
+        .then((res) => res.json())
+        .then((data) => setUsuariosDisponiveis(data))
+        .catch(() => setUsuariosDisponiveis([]))
+    } else if (isOpen) {
+      // fallback: busca todos se não houver pools
+      fetch("https://localhost:7073/api/users")
         .then((res) => res.json())
         .then((data) => setUsuariosDisponiveis(data))
         .catch(() => setUsuariosDisponiveis([]))
     }
-  }, [isOpen])
+  }, [isOpen, pools])
+
+  async function fetchTasksByProcessInstance(processInstanceId: string) {
+    if (!processInstanceId) return []
+    const response = await fetch(`https://localhost:7073/api/tasks/by-process-instance/${processInstanceId}`)
+    if (!response.ok) {
+      return []
+    }
+    return response.json()
+  }
+
+  useEffect(() => {
+    if (isOpen && processInstanceId) {
+      fetchTasksByProcessInstance(processInstanceId)
+        .then((tasks) => {
+          // Troque de taskId para xmlTaskId
+          const mapping: Record<string, string> = {}
+          tasks.forEach((task: any) => {
+            mapping[task.xmlTaskId] = task.responsibleUser?.id ?? ""
+          })
+          setResponsaveisPorTask(mapping)
+        })
+        .catch(() => setResponsaveisPorTask({}))
+    }
+  }, [isOpen, processInstanceId])
+
+// Sempre que a etapa mudar, defina o usuário já vinculado como selecionado
+  useEffect(() => {
+    console.log("Responsáveis por task:", responsaveisPorTask)
+    console.log("Etapa selecionada:", selectedEtapa)
+    console.log("responsaveisPorTask[selectedEtapa]:", responsaveisPorTask[selectedEtapa])
+    if (selectedEtapa && responsaveisPorTask[selectedEtapa]) {
+      const userId = responsaveisPorTask[selectedEtapa]
+      console.log("User ID vinculado:", userId)
+      const user = usuariosDisponiveis.find(u => String(u.id).toLowerCase() === String(userId).toLowerCase())
+      setFilteredUsers(user ? [user] : [])
+    } else {
+      // Caso contrário, filtra normalmente pelo termo de busca
+      const filtered = usuariosDisponiveis.filter(
+        (user) =>
+          (user.nome ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.cargo ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.departamento ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      setFilteredUsers(filtered)
+    }
+  }, [searchTerm, usuariosDisponiveis, selectedEtapa, responsaveisPorTask])
+
+
+  const assignUserToTask = async (taskId: string, userId: string) => {
+    const response = await fetch("https://localhost:7073/api/tasks/assign-user", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        TaskId: taskId,
+        UserId: userId,
+      }),
+    })
+    if (!response.ok) {
+      throw new Error("Erro ao atribuir usuário à tarefa")
+    }
+  }
+
+  const desvincularUsuario = async (taskId: string) => {
+  // Exemplo de endpoint para desvincular (ajuste conforme sua API)
+  await fetch(`https://localhost:7073/api/tasks/unassign-user/${taskId}`, {
+    method: "PUT",
+  })
+  setSelectedUser("")
+}
 
   const handleUserSelect = async (userId: string) => {
   setSelectedUser(userId)
@@ -82,26 +166,31 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser }: Add
     }
   }, [isOpen, etapas])
 
-  const handleSubmit = () => {
-    // Validar campos
-    const newErrors: { etapa?: string; usuario?: string } = {}
+  const handleSubmit = async () => {
+  // Validar campos
+  const newErrors: { etapa?: string; usuario?: string } = {}
 
-    if (!selectedEtapa) {
-      newErrors.etapa = "Selecione uma etapa"
-    }
+  if (!selectedEtapa) {
+    newErrors.etapa = "Selecione uma etapa"
+  }
 
-    if (!selectedUser) {
-      newErrors.usuario = "Selecione um usuário"
-    }
+  if (!selectedUser) {
+    newErrors.usuario = "Selecione um usuário"
+  }
 
-    setErrors(newErrors)
+  setErrors(newErrors)
 
-    // Se não houver erros, adicionar usuário
-    if (Object.keys(newErrors).length === 0) {
+  // Se não houver erros, adicionar usuário
+  if (Object.keys(newErrors).length === 0) {
+    try {
+      await assignUserToTask(selectedEtapa, selectedUser)
       onAddUser(selectedEtapa, selectedUser, selectedPapel)
       onClose()
+    } catch (error) {
+      setErrors({ ...newErrors, usuario: "Erro ao atribuir usuário à tarefa" })
     }
   }
+}
 
   if (!isOpen) return null
 
@@ -239,41 +328,81 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser }: Add
             </div>
 
             <div className="border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden max-h-64 overflow-y-auto bg-white dark:bg-gray-900">
-              {filteredUsers.length > 0 ? (
-                <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredUsers.map((user) => (
-                  <li
-                    key={user.id}
-                    className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${
-                      selectedUser === user.id ? "bg-blue-50 dark:bg-blue-900" : ""
-                    }`}
-                    onClick={() => handleUserSelect(user.id)}
-                  >
-                    <div className="flex items-center">
-                      <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                        <Image
-                          src={user.foto || "/placeholder.svg"}
-                          alt={user.nome}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.nome}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.cargo}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              {/* Se já houver usuário vinculado, mostra só ele */} 
+              {selectedEtapa && responsaveisPorTask[selectedEtapa] ? (
+                <ul>
+                  {usuariosDisponiveis
+                    .filter((user) => String(user.id).toLowerCase() === String(responsaveisPorTask[selectedEtapa]).toLowerCase())
+                    .map((user) => (
+                      <li key={user.id} className="p-3 bg-blue-50 dark:bg-blue-900 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <Image
+                              src={user.foto || "/placeholder.svg"}
+                              alt={user.nome}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.nome}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded dark:bg-green-900 dark:text-green-200">
+                              Responsável já vinculado a esta etapa
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.cargo}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p>
+                          </div>
+                        </div>
+                        <button
+                          className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+                          onClick={() => desvincularUsuario(selectedEtapa)}
+                        >
+                          Desvincular Usuário
+                        </button>
+                      </li>
+                    ))}
+                </ul>
               ) : (
-                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  <p>Nenhum usuário encontrado com os critérios de busca.</p>
-                </div>
+                // Caso não tenha usuário vinculado, mostra a lista normal
+                filteredUsers.length > 0 ? (
+                  <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+                    {filteredUsers.map((user) => (
+                      <li
+                        key={user.id}
+                        className={`p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer ${
+                          selectedUser === user.id ? "bg-blue-50 dark:bg-blue-900" : ""
+                        }`}
+                        onClick={() => handleUserSelect(user.id)}
+                      >
+                        <div className="flex items-center">
+                          <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
+                            <Image
+                              src={user.foto || "/placeholder.svg"}
+                              alt={user.nome}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.nome}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.cargo}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p>
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    <p>Nenhum usuário encontrado com os critérios de busca.</p>
+                  </div>
+                )
               )}
             </div>
           </div>
