@@ -12,6 +12,8 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight, Github, Chrome, Workflow } from "l
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useProfile } from "@/components/profile-context"
+import { analystProfile } from "@/components/profile-context"
+import { developerProfile } from "@/components/profile-context"
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -33,9 +35,9 @@ export default function LoginPage() {
     setTimeout(() => {
       // Definir perfil baseado no email (simulação)
       if (loginForm.email.includes("analista")) {
-        setProfile("analista")
+        setProfile(analystProfile)
       } else {
-        setProfile("colaborador")
+        setProfile(developerProfile)
       }
 
       setIsLoading(false)
@@ -46,7 +48,11 @@ export default function LoginPage() {
   const handleDemoLogin = (userType: "analista" | "colaborador") => {
     setIsLoading(true)
     setTimeout(() => {
-      setProfile(userType)
+      if (userType === "analista") {
+        setProfile(analystProfile) // use o mock importado
+      } else {
+        setProfile(developerProfile)
+      }
       setIsLoading(false)
       router.push("/")
     }, 1000)

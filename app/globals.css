@@ -338,7 +338,12 @@ body {
 
 .dark .djs-shape {
   fill: hsl(var(--card)) !important;
-  stroke: hsl(var(--border)) !important;
+  stroke: hsl(var(--border));
+  stroke-width: 0.9px !important; /* ajuste aqui para borda fina */
+}
+
+.dark .djs-shape text {
+  font-weight: normal !important;
 }
 
 .dark .djs-connection {
@@ -373,7 +378,7 @@ body {
 .dark .bpmn-toolbar button.active {
   background-color: hsl(var(--primary)) !important;
   color: hsl(var(--primary-foreground)) !important;
-}
+} 
 
 /* Tema escuro básico para o container do viewer */
 .bpmn-dark {
@@ -447,11 +452,12 @@ body {
 
 /* Cor do texto dos labels do BPMN conforme o tema */
 .djs-label {
-  fill: #111827 !important;
+  font-weight: normal !important;
 }
 
 .dark .djs-label {
   fill: #ffffff !important;
+  font-weight: normal !important;
 }
 
 
@@ -466,7 +472,7 @@ body {
 /* Adiciona efeito de destaque ao passar o mouse sobre elementos do BPMN */
 .djs-element:hover .djs-visual > :nth-child(1) {
   filter: brightness(1.08) drop-shadow(0 0 6px #2563eb55);
-  stroke-width: 4px !important;
+  stroke-width: 2.5px !important;
   stroke: #2563eb !important;
   transition: filter 0.2s, stroke 0.2s, stroke-width 0.2s;
 }
@@ -474,11 +480,19 @@ body {
 .dark .djs-element:hover .djs-visual > :nth-child(1) {
   filter: brightness(1.15) drop-shadow(0 0 8px #3b82f6aa);
   stroke: #3b82f6 !important;
+  stroke-width: 2.5px !important;
 }
 
 /* Suaviza a transição para todos os elementos BPMN */
 .djs-visual > :nth-child(1) {
   transition: filter 0.2s, stroke 0.2s, stroke-width 0.2s;
+}
+
+/* Estilização para remover negrito */
+.djs-direct-rendered text,
+text {
+  font-weight: normal !important;
+  font-family: Arial, sans-serif !important;
 }
 
 /* Barra de rolagem escura no modo dark */

@@ -116,10 +116,10 @@ const tasks = [
   },
 ]
 
-type Tab = "diagrama" | "tarefas" | "detalhes"
+type Tab = "diagrama" | "tarefas" | "acompanhamento" | "detalhes"
 
 const fetchProcessoById = async (id: string): Promise<Processo> => {
-  const res = await fetch(`https://localhost:7073/api/Bpmn/${id}`)
+  const res = await fetch(`https://localhost:7073/api/BpmnProcessInstances/${id}`)
   if (!res.ok) throw new Error("Erro ao buscar processo")
   const data = await res.json()
   // Adaptar os campos para o formato esperado pelo componente
@@ -139,7 +139,10 @@ const fetchPools = async (processId: string): Promise<string[]> => {
   return await res.json()
 }
 
-export default function ProcessoDetailsPage({ params }: { params: { id: string } }) {
+
+export default function InstanciaDetailsPage({ params }: { params: { id: string } }) {
+  const { id } = useParams()
+  const [instancia, setInstancia] = useState(null)
   const [processo, setProcesso] = useState<Processo | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>("diagrama")
@@ -150,12 +153,36 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [selectedEtapa, setSelectedEtapa] = useState<{ id: string, nome: string } | null>(null)
   const [pools, setPools] = useState<string[]>([])
+  const [instanceTasks, setInstanceTasks] = useState<any[]>([]);
 
   const etapas = tasks.map(task => ({
     id: task.id,
     nome: task.name,
     responsaveis: task.assignee ? [task.assignee] : [],
   }))
+
+  useEffect(() => {
+    if (!params.id) return;
+    fetch(`https://localhost:7073/api/BpmnProcessInstances/${params.id}/tasks`)
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao buscar tarefas da instância");
+        return res.json();
+      })
+      .then(setInstanceTasks)
+      .catch(err => setError(err.message));
+  }, [params.id]);
+
+  useEffect(() => {
+    fetch(`https://localhost:7073/api/BpmnProcessInstances/${id}`)
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao buscar instância")
+        return res.json()
+      })
+      .then(setInstancia)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [id])
+
 
   useEffect(() => {
   if (showAddUserModal && processo?.id) {
@@ -215,10 +242,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Link
-            href="/processos"
-            className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-          >
+          <Link href="/processos" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900">
             <ArrowLeft size={18} />
             Voltar
           </Link>
@@ -239,7 +263,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Coluna da esquerda: ProcessDetails + Tarefas do Processo */}
-        {/* <div className="lg:col-span-1 flex flex-col gap-6">
+        <div className="lg:col-span-1 flex flex-col gap-6">
           <ProcessDetails processo={processo} />
 
           <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -286,10 +310,10 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
               ))}
             </ul>
           </div>
-        </div> */}
+        </div>
 
         {/* Coluna da direita: Diagrama e abas */}
-        <div className="lg:col-span-4 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full min-h-0 flex flex-col">
+        <div className="lg:col-span-3 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full min-h-0 flex flex-col">
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex">
               <button
@@ -314,7 +338,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                 <ListChecks size={16} />
                 Tarefas
               </button>
-              {/* <button
+              <button
                 onClick={() => setActiveTab("acompanhamento")}
                 className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                   activeTab === "acompanhamento"
@@ -324,7 +348,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
               >
                 <Users size={16} />
                 Acompanhamento
-              </button> */}
+              </button>
               {selectedTask && (
                 <button
                   onClick={() => setActiveTab("detalhes")}
@@ -343,8 +367,8 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
 
           <div className="flex-1 min-h-0">
             {activeTab === "diagrama" && !isEditing && (
-              <div className="w-full h-full min-h-[500px] flex-1">
-                <BpmnViewer xml={processo.xml} onTaskClick={handleTaskClick} />
+              <div className="w-full h-full flex-1 min-h-0">
+                <BpmnViewer xml={processo.xml} onTaskClick={handleTaskClick} instanceTasks={instanceTasks} />
               </div>
             )}
 
@@ -358,7 +382,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
               />
             )}
             {activeTab === "tarefas" && <BpmnTaskList xml={currentXml} />}
-            {/* {activeTab === "acompanhamento" && <ProcessTracking xml={currentXml} assignees={assignees} />} */}
+            {activeTab === "acompanhamento" && <ProcessTracking xml={currentXml} assignees={assignees} />}
             {activeTab === "detalhes" && selectedTask && <TaskDetailsPanel task={selectedTask} />}
           </div>
         </div>
@@ -369,6 +393,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
         etapas={selectedEtapa ? [selectedEtapa] : etapas}
         onAddUser={handleAddUser}
         pools={pools}
+        processInstanceId={processo.id}
       />
     </div>
   )

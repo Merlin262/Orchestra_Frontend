@@ -10,8 +10,8 @@ interface Processo {
   createdAt: string
   lastUpdate: string
   tipo?: "baseline" | "instancia"
-  versao?: string
-  autor?: string
+  version?: string
+  createdByUserName?: string
   baselineId?: string
   status?: string
   responsavel?: string
@@ -64,15 +64,15 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
         </div>
 
         <div className="mb-4 text-sm">
-          {isBaseline && processo.versao && (
+          {isBaseline && processo.version && (
             <div className="text-gray-600 dark:text-gray-300">
-              <span className="font-medium">Versão:</span> {processo.versao}
+              <span className="font-medium">Versão:</span> {processo.version}
             </div>
           )}
 
-          {isBaseline && processo.autor && (
+          {isBaseline && processo.createdByUserName && (
             <div className="text-gray-600 dark:text-gray-300">
-              <span className="font-medium">Autor:</span> {processo.autor}
+              <span className="font-medium">Autor:</span> {processo.createdByUserName}
             </div>
           )}
 
@@ -99,13 +99,23 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
               Editar
             </Link>
 
-            <Link
-              href={`/processos/${processo.id}`}
-              className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-medium text-sm"
-            >
-              <Eye size={16} />
-              Visualizar
-            </Link>
+            {isBaseline ? (
+              <Link
+                href={`/processos/${processo.id}`}
+                className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-medium text-sm"
+              >
+                <Eye size={16} />
+                Visualizar
+              </Link>
+            ) : (
+              <Link
+                href={`/processos/instance/${processo.id}`}
+                className="inline-flex items-center gap-1 text-green-600 hover:text-green-800 font-medium text-sm"
+              >
+                <Eye size={16} />
+                Visualizar
+              </Link>
+            )}
 
             {isBaseline && (
               <button
@@ -153,7 +163,7 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
             Excluir
           </button>
         </div>
+      </div>
     </div>
-  </div>
   )
 }

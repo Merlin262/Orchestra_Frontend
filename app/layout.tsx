@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/navbar"
-//import SidebarColaborador from "@/components/sidebar-colaborador"
+import { SidebarWrapper } from "@/components/sidebar-collaborator"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ProfileProvider } from "@/components/profile-context"
 
@@ -30,7 +30,7 @@ export default function RootLayout({
             <div className="min-h-screen bg-background text-foreground">
               <Navbar />
               <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-                {/* <SidebarColaborador /> */}
+                <SidebarWrapper />
                 <main className="flex-1 p-4">{children}</main>
               </div>
             </div>
