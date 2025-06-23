@@ -7,6 +7,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { motion } from "framer-motion"
 import { ArrowRight, Code, BarChart2, Users, Clock, Zap, FileText, ChevronRight, Star } from "lucide-react"
+import { useEnvironment } from "@/hooks/use-environment"
 
 // Componente de animação para fade-in
 const FadeIn = ({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) => {
@@ -80,10 +81,13 @@ const Testimonial = ({
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false)
+  const { isDevelopment, logEnvironment, appName, appVersion } = useEnvironment()
 
   useEffect(() => {
     setIsVisible(true)
-  }, [])
+    // Log do ambiente apenas em desenvolvimento
+    logEnvironment()
+  }, [logEnvironment])
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -165,6 +169,14 @@ export default function Home() {
       {/* Estatísticas */}
       <section className="py-12 bg-white dark:bg-gray-800">
         <div className="container mx-auto px-4">
+          {isDevelopment && (
+            <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="flex items-center justify-center gap-2 text-yellow-800 dark:text-yellow-200">
+                <span className="text-sm font-medium">🔧 Ambiente de Desenvolvimento</span>
+                <span className="text-xs">({appName} v{appVersion})</span>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <FadeIn delay={0.1}>
               <div className="p-4">

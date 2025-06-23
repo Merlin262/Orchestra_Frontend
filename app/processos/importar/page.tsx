@@ -6,6 +6,7 @@ import { useState, useRef } from "react"
 import { Upload, FileUp, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useProfile } from "@/components/profile-context"
+import { apiClient } from "@/lib/api-client"
 
 export default function ImportarProcessoPage() {
   const [arquivo, setArquivo] = useState<File | null>(null)
@@ -67,21 +68,11 @@ export default function ImportarProcessoPage() {
       formData.append("file", arquivo);
       formData.append("userId", profile.Id);
   
-      const response = await fetch("https://localhost:7073/api/Bpmn/upload", {
-        method: "POST",
-        body: formData,
-      });
-  
-      if (!response.ok) {
-        throw new Error(`Erro ao enviar arquivo: ${response.status} ${response.statusText}`);
-      }
-  
-      const data = await response.json();
+      await apiClient.uploadFile("/api/Bpmn/upload", formData);
   
       setStatus("success");
       setMensagem("Arquivo importado com sucesso!");
   
-      // Redirecionar após 2 segundos
       setTimeout(() => {
         router.push("/processos");
       }, 2000);

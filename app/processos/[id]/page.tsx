@@ -11,6 +11,16 @@ import BpmnTaskList from "@/components/bpmn-task-list"
 import { ArrowLeft, Edit, FileText, ListChecks, Users, Info } from "lucide-react"
 import Link from "next/link"
 import AddUserModal from "@/components/add-user-modal"
+import { apiClient } from "@/lib/api-client"
+
+interface ProcessoData {
+  id: string
+  name: string
+  CreatedBy: string
+  createdAt: string
+  lastUpdate: string
+  xmlContent: string
+}
 
 type Processo = {
   id: string
@@ -119,24 +129,28 @@ const tasks = [
 type Tab = "diagrama" | "tarefas" | "detalhes"
 
 const fetchProcessoById = async (id: string): Promise<Processo> => {
-  const res = await fetch(`https://localhost:7073/api/Bpmn/${id}`)
-  if (!res.ok) throw new Error("Erro ao buscar processo")
-  const data = await res.json()
-  // Adaptar os campos para o formato esperado pelo componente
-  return {
-    id: data.id,
-    name: data.name,
-    CreatedBy: data.CreatedBy,
-    createdAt: data.createdAt,
-    lastUpdate: data.lastUpdate,
-    xml: data.xmlContent,
+  try {
+    const data = await apiClient.get<ProcessoData>(`/api/Bpmn/${id}`)
+    // Adaptar os campos para o formato esperado pelo componente
+    return {
+      id: data.id,
+      name: data.name,
+      CreatedBy: data.CreatedBy,
+      createdAt: data.createdAt,
+      lastUpdate: data.lastUpdate,
+      xml: data.xmlContent,
+    }
+  } catch (error) {
+    throw new Error("Erro ao buscar processo")
   }
 }
 
 const fetchPools = async (processId: string): Promise<string[]> => {
-  const res = await fetch(`https://localhost:7073/api/Bpmn/${processId}/pools`)
-  if (!res.ok) throw new Error("Erro ao buscar pools")
-  return await res.json()
+  try {
+    return await apiClient.get<string[]>(`/api/Bpmn/${processId}/pools`)
+  } catch (error) {
+    throw new Error("Erro ao buscar pools")
+  }
 }
 
 export default function ProcessoDetailsPage({ params }: { params: { id: string } }) {
@@ -154,7 +168,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
   const etapas = tasks.map(task => ({
     id: task.id,
     nome: task.name,
-    responsaveis: task.assignee ? [task.assignee] : [],
+    responsaveis: [], // Array vazio para compatibilidade com o tipo Etapa
   }))
 
   useEffect(() => {
@@ -369,6 +383,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
         etapas={selectedEtapa ? [selectedEtapa] : etapas}
         onAddUser={handleAddUser}
         pools={pools}
+        processInstanceId={processo?.id || ""}
       />
     </div>
   )

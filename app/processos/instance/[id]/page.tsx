@@ -11,6 +11,16 @@ import BpmnTaskList from "@/components/bpmn-task-list"
 import { ArrowLeft, Edit, FileText, ListChecks, Users, Info } from "lucide-react"
 import Link from "next/link"
 import AddUserModal from "@/components/add-user-modal"
+import { apiClient } from "@/lib/api-client"
+
+interface ProcessoData {
+  id: string
+  name: string
+  CreatedBy: string
+  createdAt: string
+  lastUpdate: string
+  xmlContent: string
+}
 
 type Processo = {
   id: string
@@ -119,26 +129,29 @@ const tasks = [
 type Tab = "diagrama" | "tarefas" | "acompanhamento" | "detalhes"
 
 const fetchProcessoById = async (id: string): Promise<Processo> => {
-  const res = await fetch(`https://localhost:7073/api/BpmnProcessInstances/${id}`)
-  if (!res.ok) throw new Error("Erro ao buscar processo")
-  const data = await res.json()
-  // Adaptar os campos para o formato esperado pelo componente
-  return {
-    id: data.id,
-    name: data.name,
-    CreatedBy: data.CreatedBy,
-    createdAt: data.createdAt,
-    lastUpdate: data.lastUpdate,
-    xml: data.xmlContent,
+  try {
+    const data = await apiClient.get<ProcessoData>(`/api/BpmnProcessInstances/${id}`)
+    // Adaptar os campos para o formato esperado pelo componente
+    return {
+      id: data.id,
+      name: data.name,
+      CreatedBy: data.CreatedBy,
+      createdAt: data.createdAt,
+      lastUpdate: data.lastUpdate,
+      xml: data.xmlContent,
+    }
+  } catch (error) {
+    throw new Error("Erro ao buscar processo")
   }
 }
 
 const fetchPools = async (processId: string): Promise<string[]> => {
-  const res = await fetch(`https://localhost:7073/api/Bpmn/${processId}/pools`)
-  if (!res.ok) throw new Error("Erro ao buscar pools")
-  return await res.json()
+  try {
+    return await apiClient.get<string[]>(`/api/Bpmn/${processId}/pools`)
+  } catch (error) {
+    throw new Error("Erro ao buscar pools")
+  }
 }
-
 
 export default function InstanciaDetailsPage({ params }: { params: { id: string } }) {
   const { id } = useParams()
@@ -163,34 +176,25 @@ export default function InstanciaDetailsPage({ params }: { params: { id: string 
 
   useEffect(() => {
     if (!params.id) return;
-    fetch(`https://localhost:7073/api/BpmnProcessInstances/${params.id}/tasks`)
-      .then(res => {
-        if (!res.ok) throw new Error("Erro ao buscar tarefas da instância");
-        return res.json();
-      })
+    apiClient.get<any[]>(`/api/BpmnProcessInstances/${params.id}/tasks`)
       .then(setInstanceTasks)
       .catch(err => setError(err.message));
   }, [params.id]);
 
   useEffect(() => {
-    fetch(`https://localhost:7073/api/BpmnProcessInstances/${id}`)
-      .then(res => {
-        if (!res.ok) throw new Error("Erro ao buscar instância")
-        return res.json()
-      })
+    apiClient.get<any>(`/api/BpmnProcessInstances/${id}`)
       .then(setInstancia)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [id])
 
-
   useEffect(() => {
-  if (showAddUserModal && processo?.id) {
-    fetchPools(processo.id)
-      .then(setPools)
-      .catch(() => setPools([]))
-  }
-}, [showAddUserModal, processo?.id])
+    if (showAddUserModal && processo?.id) {
+      fetchPools(processo.id)
+        .then(setPools)
+        .catch(() => setPools([]))
+    }
+  }, [showAddUserModal, processo?.id])
 
   const handleTaskClick = (taskId: string, taskName: string) => {
     setSelectedEtapa({ id: taskId, nome: taskName })
@@ -212,7 +216,6 @@ export default function InstanciaDetailsPage({ params }: { params: { id: string 
       .catch(() => setError("Erro ao carregar processo"))
       .finally(() => setLoading(false))
   }, [params.id])
-
 
   if (loading) return <div className="p-6">Carregando...</div>
   if (error || !processo) return <div className="p-6 text-red-500">{error || "Processo não encontrado"}</div>

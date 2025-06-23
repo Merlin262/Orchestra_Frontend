@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { X, Search, UserPlus, AlertCircle } from "lucide-react"
+import { X, Search, UserPlus, AlertCircle, Check } from "lucide-react"
+import { apiClient } from "@/lib/api-client"
 
 interface User {
   id: string
@@ -11,6 +12,13 @@ interface User {
   cargo: string
   departamento: string
   foto: string
+}
+
+interface Task {
+  xmlTaskId: string
+  responsibleUser?: {
+    id: string
+  }
 }
 
 interface Etapa {
@@ -53,35 +61,33 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
   useEffect(() => {
     if (isOpen && pools && pools.length > 0) {
       const params = pools.map(pool => `groupNames=${encodeURIComponent(pool)}`).join("&")
-      fetch(`https://localhost:7073/api/users/ByGroups?${params}`)
-        .then((res) => res.json())
+      apiClient.get<User[]>(`/api/users/ByGroups?${params}`)
         .then((data) => setUsuariosDisponiveis(data))
         .catch(() => setUsuariosDisponiveis([]))
     } else if (isOpen) {
       // fallback: busca todos se não houver pools
-      fetch("https://localhost:7073/api/users")
-        .then((res) => res.json())
+      apiClient.get<User[]>("/api/users")
         .then((data) => setUsuariosDisponiveis(data))
         .catch(() => setUsuariosDisponiveis([]))
     }
   }, [isOpen, pools])
 
-  async function fetchTasksByProcessInstance(processInstanceId: string) {
+  async function fetchTasksByProcessInstance(processInstanceId: string): Promise<Task[]> {
     if (!processInstanceId) return []
-    const response = await fetch(`https://localhost:7073/api/tasks/by-process-instance/${processInstanceId}`)
-    if (!response.ok) {
+    try {
+      return await apiClient.get<Task[]>(`/api/tasks/by-process-instance/${processInstanceId}`)
+    } catch (error) {
       return []
     }
-    return response.json()
   }
 
   useEffect(() => {
     if (isOpen && processInstanceId) {
       fetchTasksByProcessInstance(processInstanceId)
-        .then((tasks) => {
+        .then((tasks: Task[]) => {
           // Troque de taskId para xmlTaskId
           const mapping: Record<string, string> = {}
-          tasks.forEach((task: any) => {
+          tasks.forEach((task: Task) => {
             mapping[task.xmlTaskId] = task.responsibleUser?.id ?? ""
           })
           setResponsaveisPorTask(mapping)
@@ -115,28 +121,24 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
 
 
   const assignUserToTask = async (taskId: string, userId: string) => {
-    const response = await fetch("https://localhost:7073/api/tasks/assign-user", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      await apiClient.put("/api/tasks/assign-user", {
         TaskId: taskId,
         UserId: userId,
-      }),
-    })
-    if (!response.ok) {
+      })
+    } catch (error) {
       throw new Error("Erro ao atribuir usuário à tarefa")
     }
   }
 
   const desvincularUsuario = async (taskId: string) => {
-  // Exemplo de endpoint para desvincular (ajuste conforme sua API)
-  await fetch(`https://localhost:7073/api/tasks/unassign-user/${taskId}`, {
-    method: "PUT",
-  })
-  setSelectedUser("")
-}
+    try {
+      await apiClient.put(`/api/tasks/unassign-user/${taskId}`)
+      setSelectedUser("")
+    } catch (error) {
+      console.error("Erro ao desvincular usuário:", error)
+    }
+  }
 
   const handleUserSelect = async (userId: string) => {
   setSelectedUser(userId)

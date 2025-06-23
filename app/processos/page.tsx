@@ -6,6 +6,7 @@ import ProcessCard from "@/components/process-card"
 import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useProfile } from "@/components/profile-context"
+import { apiClient } from "@/lib/api-client"
 
 type Processo = {
   id: string
@@ -32,35 +33,29 @@ export default function ProcessosPage() {
     if (!profile?.Id) return
 
     setLoading(true)
-    fetch(`https://localhost:7073/api/Bpmn/by-user/${profile.Id}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Erro ao buscar processos")
-        return res.json()
-      })
+    apiClient.get<Processo[]>(`/api/Bpmn/by-user/${profile.Id}`)
       .then(setProcessos)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [profile])
 
   useEffect(() => {
-  fetch("https://localhost:7073/api/BpmnProcessInstances")
-    .then(async (res) => {
-      if (!res.ok) throw new Error("Erro ao buscar instâncias de processos")
-      const data = await res.json()
-      const mapped = data.map((proc: any) => ({
-        ...proc,
-        tipo: proc.tipo ?? proc.type ?? "instancia",
-        autor: proc.autor ?? proc.CreatedBy,
-        responsavel: proc.responsavel ?? proc.Responsavel,
-        versao: proc.versao ?? proc.Versao,
-        status: proc.status ?? proc.Status,
-      }))
-      return mapped
-    })
-    .then(setInstanciasProcessos)
-    .catch((err) => setErrorInstancias(err.message))
-    .finally(() => setLoadingInstancias(false))
-}, [])
+    apiClient.get<any[]>("/api/BpmnProcessInstances")
+      .then((data: any[]) => {
+        const mapped = data.map((proc: any) => ({
+          ...proc,
+          tipo: proc.tipo ?? proc.type ?? "instancia",
+          autor: proc.autor ?? proc.CreatedBy,
+          responsavel: proc.responsavel ?? proc.Responsavel,
+          versao: proc.versao ?? proc.Versao,
+          status: proc.status ?? proc.Status,
+        }))
+        return mapped
+      })
+      .then(setInstanciasProcessos)
+      .catch((err) => setErrorInstancias(err.message))
+      .finally(() => setLoadingInstancias(false))
+  }, [])
 
   return (
     <div className="container mx-auto p-6">

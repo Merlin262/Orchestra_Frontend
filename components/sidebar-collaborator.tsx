@@ -21,6 +21,14 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { useProfile } from "./profile-context"
+import { apiClient } from "@/lib/api-client"
+
+interface User {
+  id: string
+  fullName: string
+  email: string
+  role: string
+}
 
 // Wrapper para garantir que só renderiza a sidebar se houver perfil
 export function SidebarWrapper() {
@@ -30,12 +38,12 @@ export function SidebarWrapper() {
   return <SidebarColaborador />
 }
 
-export async function getUserById(id: string) {
-  const response = await fetch(`https://localhost:7073/api/users/${id}`)
-  if (!response.ok) {
+export async function getUserById(id: string): Promise<User> {
+  try {
+    return await apiClient.get<User>(`/api/users/${id}`)
+  } catch (error) {
     throw new Error("Usuário não encontrado")
   }
-  return response.json()
 }
 
 export default function SidebarColaborador() {

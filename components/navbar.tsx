@@ -6,6 +6,7 @@ import { LogIn, UserPlus } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
 import { ProfileSwitcher } from "./profile-switcher"
 import Image from "next/image"
+import { isDevelopment } from "@/lib/config"
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -17,6 +18,11 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2">
             <Image src="/Orchestra_logo.png" alt="Orchestra Logo" width={40} height={40} />
             <span className="font-bold text-xl dark:text-white">Orchestra</span>
+            {isDevelopment() && (
+              <span className="bg-yellow-500 text-yellow-900 text-xs px-2 py-1 rounded-full font-medium">
+                DEV
+              </span>
+            )}
           </Link>
 
           <nav className="hidden md:flex space-x-8">

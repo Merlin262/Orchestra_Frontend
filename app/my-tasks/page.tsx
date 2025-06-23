@@ -18,6 +18,7 @@ import {
 import Image from "next/image"
 import { useProfile } from "@/components/profile-context"
 import { useEffect } from "react"
+import { apiClient } from "@/lib/api-client"
 
 // Dados simulados de tarefas atribuídas ao colaborador
 
@@ -218,32 +219,17 @@ export default function MinhasTarefasPage() {
 
   async function atualizarStatusTarefa(taskId: string, statusId: number) {
     console.log("aqui")
-    await fetch("https://localhost:7073/api/Tasks/update-status", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ TaskId: taskId, StatusId: statusId }),
-    });
-    // Atualize o estado local para refletir o novo status
-    setTarefaDetalhada((prev: any) =>
-      prev
-        ? {
-            ...prev,
-            status:
-              statusId === 1
-                ? "em_andamento"
-                : statusId === 2
-                ? "concluida"
-                : statusId === 3
-                ? "pendente"
-                : prev.status,
-          }
-        : prev
-    );
-    setTarefas((prev) =>
-      prev.map((t) =>
-        t.id === taskId
+    try {
+      await apiClient.put("/api/Tasks/update-status", {
+        TaskId: taskId,
+        StatusId: statusId
+      });
+      
+      // Atualize o estado local para refletir o novo status
+      setTarefaDetalhada((prev: any) =>
+        prev
           ? {
-              ...t,
+              ...prev,
               status:
                 statusId === 1
                   ? "em_andamento"
@@ -251,48 +237,70 @@ export default function MinhasTarefasPage() {
                   ? "concluida"
                   : statusId === 3
                   ? "pendente"
-                  : t.status,
+                  : prev.status,
             }
-          : t
-      )
-    );
+          : prev
+      );
+      setTarefas((prev) =>
+        prev.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                status:
+                  statusId === 1
+                    ? "em_andamento"
+                    : statusId === 2
+                    ? "concluida"
+                    : statusId === 3
+                    ? "pendente"
+                    : t.status,
+              }
+            : t
+        )
+      );
+    } catch (error) {
+      console.error("Erro ao atualizar status da tarefa:", error);
+    }
   }
 
 
   useEffect(() => {
-  if (!profile?.Id) return
-  setLoading(true)
-  fetch(`https://localhost:7073/api/Tasks/user-process-instances/${profile.Id}`)
-    .then((res) => res.json())
-    .then((data) => {
-      // Transforme os dados do backend para o formato esperado pelo front
-      const tarefasTransformadas = data.flatMap((proc: any) =>
-        (proc.tasks || []).map((t: any) => ({
-          id: t.taskId,
-          nome: t.name,
-          processoId: proc.processInstanceId,
-          processoNome: proc.name,
-          etapaId: t.xmlTaskId,
-          etapaNome: t.name || t.xmlTaskId,
-          prazo: t.completedAt ? new Date(t.completedAt).toLocaleDateString() : "",
-          dataInicio: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "",
-          prioridade: "média",
-          status: t.statusId,
-          progresso: t.completed ? 100 : 0,
-          responsavel: t.responsibleUser
-            ? {
-                id: t.responsibleUser.id,
-                nome: t.responsibleUser.fullName || t.responsibleUser.userName || "",
-                foto: "/placeholder.svg",
-              }
-            : { id: "", nome: "", foto: "/placeholder.svg" },
-          comentarios: t.comments || [],
-          subtarefas: [],
-        }))
-      )
-      setTarefas(tarefasTransformadas)
-    })
-    .finally(() => setLoading(false))
+    if (!profile?.Id) return
+    setLoading(true)
+    apiClient.get<any[]>(`/api/Tasks/user-process-instances/${profile.Id}`)
+      .then((data: any[]) => {
+        // Transforme os dados do backend para o formato esperado pelo front
+        const tarefasTransformadas = data.flatMap((proc: any) =>
+          (proc.tasks || []).map((t: any) => ({
+            id: t.taskId,
+            nome: t.name,
+            processoId: proc.processInstanceId,
+            processoNome: proc.name,
+            etapaId: t.xmlTaskId,
+            etapaNome: t.name || t.xmlTaskId,
+            prazo: t.completedAt ? new Date(t.completedAt).toLocaleDateString() : "",
+            dataInicio: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "",
+            prioridade: "média",
+            status: t.statusId,
+            progresso: t.completed ? 100 : 0,
+            responsavel: t.responsibleUser
+              ? {
+                  id: t.responsibleUser.id,
+                  nome: t.responsibleUser.fullName || t.responsibleUser.userName || "",
+                  foto: "/placeholder.svg",
+                }
+              : { id: "", nome: "", foto: "/placeholder.svg" },
+            comentarios: t.comments || [],
+            subtarefas: [],
+          }))
+        )
+        setTarefas(tarefasTransformadas)
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar tarefas:", error);
+        setTarefas([]);
+      })
+      .finally(() => setLoading(false))
   }, [profile?.Id])
 
   // Filtrar tarefas com base nos filtros selecionados

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { FileEdit, Trash2, Calendar, Eye, BookOpen, Play, Copy } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { apiClient } from "@/lib/api-client"
 
 interface Processo {
   id: string
@@ -122,16 +123,9 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
                 className="inline-flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 font-medium text-sm"
                 onClick={async () => {
                   try {
-                    const res = await fetch(`https://localhost:7073/api/BpmnProcessInstances/CreateFromBaseline/${processo.id}`, {
-                      method: "POST",
-                    });
-                    if (res.ok) {
-                      alert("Instância de processo criada com sucesso!");
-                      window.location.reload();
-                    } else {
-                      const msg = await res.text();
-                      alert("Erro ao criar instância de processo: " + msg);
-                    }
+                    await apiClient.post(`/api/BpmnProcessInstances/CreateFromBaseline/${processo.id}`);
+                    alert("Instância de processo criada com sucesso!");
+                    window.location.reload();
                   } catch (error) {
                     alert("Erro ao criar instância de processo.");
                   }
@@ -148,12 +142,10 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
             className="inline-flex items-center gap-1 text-red-600 hover:text-red-800 font-medium text-sm"
             onClick={async () => {
               if (confirm("Tem certeza que deseja excluir este processo?")) {
-                const res = await fetch(`https://localhost:7073/api/bpmn/${processo.id}`, {
-                  method: "DELETE",
-                });
-                if (res.ok) {
+                try {
+                  await apiClient.delete(`/api/bpmn/${processo.id}`);
                   window.location.reload();
-                } else {
+                } catch (error) {
                   alert("Erro ao excluir o processo.");
                 }
               }
