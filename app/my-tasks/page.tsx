@@ -31,118 +31,7 @@ export enum TaskStatus {
   NotStarted = 3,
 }
 
-const minhasTarefas = [
-  {
-    id: "task1",
-    nome: "Verificar documentação do cliente",
-    processoId: "proc1",
-    processoNome: "Processo de Aprovação de Crédito",
-    etapaId: "etapa1",
-    etapaNome: "Análise de Documentos",
-    prazo: "22/05/2023",
-    dataInicio: "15/05/2023",
-    prioridade: "alta",
-    status: "em_andamento",
-    progresso: 60,
-    responsavel: {
-      id: "user1",
-      nome: "Carlos Santos",
-      foto: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-    comentarios: [
-      { autor: "Ana Silva", data: "16/05/2023", texto: "Documentos recebidos, iniciando verificação." },
-      { autor: "Carlos Santos", data: "18/05/2023", texto: "Encontrei inconsistências no comprovante de renda." },
-    ],
-    subtarefas: [
-      { id: "sub1", nome: "Verificar identidade", concluida: true },
-      { id: "sub2", nome: "Verificar comprovante de renda", concluida: true },
-      { id: "sub3", nome: "Verificar histórico de crédito", concluida: false },
-      { id: "sub4", nome: "Gerar relatório de análise", concluida: false },
-    ],
-  },
-  {
-    id: "task2",
-    nome: "Aprovar solicitação de compra",
-    processoId: "proc2",
-    processoNome: "Processo de Compras",
-    etapaId: "etapa2",
-    etapaNome: "Aprovação de Solicitações",
-    prazo: "25/05/2023",
-    dataInicio: "20/05/2023",
-    prioridade: "média",
-    status: "pendente",
-    progresso: 30,
-    responsavel: {
-      id: "user1",
-      nome: "Carlos Santos",
-      foto: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-    comentarios: [{ autor: "Maria Oliveira", data: "20/05/2023", texto: "Solicitação enviada para aprovação." }],
-    subtarefas: [
-      { id: "sub5", nome: "Verificar orçamento disponível", concluida: true },
-      { id: "sub6", nome: "Analisar cotações", concluida: false },
-      { id: "sub7", nome: "Validar com departamento financeiro", concluida: false },
-      { id: "sub8", nome: "Emitir parecer final", concluida: false },
-    ],
-  },
-  {
-    id: "task3",
-    nome: "Revisar contrato de fornecedor",
-    processoId: "proc3",
-    processoNome: "Gestão de Contratos",
-    etapaId: "etapa3",
-    etapaNome: "Revisão Legal",
-    prazo: "30/05/2023",
-    dataInicio: "18/05/2023",
-    prioridade: "baixa",
-    status: "concluida",
-    progresso: 100,
-    responsavel: {
-      id: "user1",
-      nome: "Carlos Santos",
-      foto: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-    comentarios: [
-      { autor: "Carlos Santos", data: "19/05/2023", texto: "Iniciando revisão do contrato." },
-      { autor: "Carlos Santos", data: "22/05/2023", texto: "Encontradas cláusulas que precisam de ajustes." },
-      { autor: "Carlos Santos", data: "25/05/2023", texto: "Revisão concluída e enviada para o jurídico." },
-    ],
-    subtarefas: [
-      { id: "sub9", nome: "Revisar cláusulas de pagamento", concluida: true },
-      { id: "sub10", nome: "Verificar prazos e condições", concluida: true },
-      { id: "sub11", nome: "Validar com departamento jurídico", concluida: true },
-      { id: "sub12", nome: "Enviar feedback ao fornecedor", concluida: true },
-    ],
-  },
-  {
-    id: "task4",
-    nome: "Preparar apresentação de resultados",
-    processoId: "proc4",
-    processoNome: "Reunião Trimestral",
-    etapaId: "etapa4",
-    etapaNome: "Preparação de Materiais",
-    prazo: "28/05/2023",
-    dataInicio: "21/05/2023",
-    prioridade: "alta",
-    status: "atrasada",
-    progresso: 45,
-    responsavel: {
-      id: "user1",
-      nome: "Carlos Santos",
-      foto: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-    comentarios: [
-      { autor: "João Silva", data: "21/05/2023", texto: "Dados financeiros enviados para inclusão na apresentação." },
-      { autor: "Carlos Santos", data: "23/05/2023", texto: "Trabalhando nos gráficos comparativos." },
-    ],
-    subtarefas: [
-      { id: "sub13", nome: "Coletar dados financeiros", concluida: true },
-      { id: "sub14", nome: "Criar gráficos comparativos", concluida: true },
-      { id: "sub15", nome: "Preparar análise de tendências", concluida: false },
-      { id: "sub16", nome: "Revisar com diretoria", concluida: false },
-    ],
-  },
-]
+//const minhasTarefas = []
 
 // Componente para exibir o status da tarefa
 const StatusBadge = ({ status }: { status: string }) => {
@@ -215,11 +104,12 @@ export default function MinhasTarefasPage() {
   const { profile } = useProfile()
   const [tarefas, setTarefas] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
-  const todasTarefas = [...minhasTarefas, ...tarefas]
+  const todasTarefas = [ ...tarefas]
   const router = useRouter()
 
   useEffect(() => {
-      if (!loading && (!profile || profile.ProfileType !== "Employee")) {
+    console.log("Profile:", profile)
+      if (!profile || (profile.ProfileType !== "Employee" && profile?.ProfileType !== ProfileTypeEnum.Employee.toString())) {
         router.replace("/auth")
       }
     }, [profile, loading, router])
@@ -356,11 +246,11 @@ export default function MinhasTarefasPage() {
 
   // Calcular o número de tarefas por status
   const contadorStatus = {
-    total: minhasTarefas.length,
-    pendente: minhasTarefas.filter((t) => t.status === "pendente").length,
-    em_andamento: minhasTarefas.filter((t) => t.status === "em_andamento").length,
-    concluida: minhasTarefas.filter((t) => t.status === "concluida").length,
-    atrasada: minhasTarefas.filter((t) => t.status === "atrasada").length,
+    total: todasTarefas.length,
+    pendente: todasTarefas.filter((t) => t.status === "pendente").length,
+    em_andamento: todasTarefas.filter((t) => t.status === "em_andamento").length,
+    concluida: todasTarefas.filter((t) => t.status === "concluida").length,
+    atrasada: todasTarefas.filter((t) => t.status === "atrasada").length,
   }
 
   return (
@@ -575,7 +465,7 @@ export default function MinhasTarefasPage() {
                         <span className="text-gray-700 dark:text-gray-300">{tarefa.responsavel.nome}</span>
                       </div>
 
-                      <div className="flex items-center gap-4">
+                      {/* <div className="flex items-center gap-4">
                         <span className="flex items-center">
                           <MessageSquare size={16} className="mr-1 text-gray-400 dark:text-gray-500" />
                           {tarefa.comentarios.length}
@@ -584,7 +474,7 @@ export default function MinhasTarefasPage() {
                           <CheckCircle size={16} className="mr-1 text-gray-400 dark:text-gray-500" />
                           {tarefa.subtarefas.filter((st) => st.concluida).length}/{tarefa.subtarefas.length}
                         </span>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
 
@@ -609,7 +499,7 @@ export default function MinhasTarefasPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subtarefas</h4>
+                        {/* <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subtarefas</h4>
                         <ul className="space-y-2">
                           {tarefa.subtarefas.map((subtarefa) => (
                             <li key={subtarefa.id} className="flex items-start">
@@ -635,7 +525,7 @@ export default function MinhasTarefasPage() {
                               </span>
                             </li>
                           ))}
-                        </ul>
+                        </ul> */}
                       </div>
 
                       <div>
@@ -764,7 +654,7 @@ export default function MinhasTarefasPage() {
                 >
                   Detalhes
                 </button>
-                <button
+                {/* <button
                   onClick={() => setAbaAtiva("subtarefas")}
                   className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
                     abaAtiva === "subtarefas"
@@ -776,7 +666,7 @@ export default function MinhasTarefasPage() {
                   <span className="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded-full text-xs">
                     {tarefaDetalhada.subtarefas.filter((st) => st.concluida).length}/{tarefaDetalhada.subtarefas.length}
                   </span>
-                </button>
+                </button> */}
                 <button
                   onClick={() => setAbaAtiva("comentarios")}
                   className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
@@ -858,7 +748,7 @@ export default function MinhasTarefasPage() {
                           ></div>
                         </div>
 
-                        <div className="flex justify-between items-center mb-2">
+                        {/* <div className="flex justify-between items-center mb-2">
                           <span className="text-sm text-gray-600 dark:text-gray-400">Subtarefas Concluídas</span>
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {tarefaDetalhada.subtarefas.filter((st) => st.concluida).length}/
@@ -879,7 +769,7 @@ export default function MinhasTarefasPage() {
                               }%`,
                             }}
                           ></div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>
@@ -927,7 +817,7 @@ export default function MinhasTarefasPage() {
                 </div>
               )}
 
-              {abaAtiva === "subtarefas" && (
+              {/* {abaAtiva === "subtarefas" && (
                 <div>
                   <div className="mb-4 flex justify-between items-center">
                     <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">Lista de Subtarefas</h3>
@@ -1004,7 +894,7 @@ export default function MinhasTarefasPage() {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
 
               {abaAtiva === "comentarios" && (
                 <div>

@@ -1,4 +1,11 @@
-import { getApiUrl, getApiConfig, isDevelopment } from '@/lib/config';
+import { getApiUrl, getApiConfig } from '@/lib/config';
+
+/**
+ * Recupera o token de autenticação armazenado localmente
+ */
+function getAuthToken(): string | null {
+  return localStorage.getItem('token');
+}
 
 /**
  * Cliente de API que usa as configurações de ambiente
@@ -18,35 +25,35 @@ class ApiClient {
   }
 
   /**
-   * Faz uma requisição HTTP
+   * Faz uma requisição HTTP com suporte a token de autenticação
    */
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this._baseUrl}${endpoint}`;
-    
-    const defaultOptions: RequestInit = {
-      headers: {
-        ...this.config.headers,
-        ...options.headers,
-      },
+
+    const token = getAuthToken();
+
+    const defaultHeaders: HeadersInit = {
+      ...this.config.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
     };
 
-    const finalOptions = { ...defaultOptions, ...options };
-
-    // Log da requisição apenas em desenvolvimento
-
+    const finalOptions: RequestInit = {
+      ...options,
+      headers: defaultHeaders,
+    };
 
     try {
       const response = await fetch(url, finalOptions);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-
       return data;
     } catch (error) {
       throw error;
@@ -58,19 +65,24 @@ class ApiClient {
    */
   async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this._baseUrl}${endpoint}`;
+    const token = getAuthToken();
+
+    const headers: HeadersInit = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
+        headers,
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-
       return data;
     } catch (error) {
       throw error;

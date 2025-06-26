@@ -34,7 +34,31 @@ interface User {
 // Wrapper para garantir que só renderiza a sidebar se houver perfil
 export function SidebarWrapper() {
   const { profile } = useProfile()
-  if (!profile || profile.Role === "notLoggedIn" || (profile.ProfileType == "ADM" || profile.ProfileType == ProfileTypeEnum.ADM.toString())) return null
+  const [mounted, setMounted] = useState(false)
+  const [isReady, setIsReady] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    // Aguarda um pouco para garantir que o perfil foi carregado
+    if (mounted && profile !== undefined) {
+      const timer = setTimeout(() => {
+        setIsReady(true)
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [mounted, profile])
+
+  // Não renderiza até estar pronto
+  if (!isReady) return null
+  
+  if (!profile || profile.Role === "notLoggedIn" || 
+      (profile.ProfileType == "ADM" || profile.ProfileType == ProfileTypeEnum.ADM.toString())) {
+    return null
+  }
+  
   return <SidebarColaborador />
 }
 

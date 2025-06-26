@@ -51,10 +51,14 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-      if (!loading && (!profile || profile.ProfileType !== "ADM")) {
+    if (profile !== undefined) {
+      setLoading(false)
+      if (!profile || (profile.ProfileType !== "ADM" && profile?.ProfileType !== ProfileTypeEnum.ADM.toString())) {
         router.replace("/auth")
+        return
       }
-    }, [profile, loading, router])
+    }
+  }, [profile, router])
 
   useEffect(() => {
     async function fetchGroups() {
@@ -90,15 +94,8 @@ export default function AdminPage() {
     fetchUsers()
   }, [])
 
-  // Redireciona se não for admin, usando useEffect
-  useEffect(() => {
-    if (!loading && (!profile || profile.ProfileType !== "ADM")) {
-      router.replace("/auth")
-    }
-  }, [profile, loading, router])
-
   // Mostra loading enquanto o profile está sendo carregado
-  if (typeof profile === "undefined") {
+  if (loading || typeof profile === "undefined") {
     return (
       <div className="flex items-center justify-center h-screen">
         <h2 className="text-xl font-bold text-gray-500">Carregando...</h2>
@@ -106,12 +103,9 @@ export default function AdminPage() {
     )
   }
 
-  console.log("Perfil do usuário adm:", profile)
-  if ((!profile || profile.ProfileType !== ProfileTypeEnum.ADM.toString()) && profile?.ProfileType !== "ADM") {
+  if (!profile || (profile.ProfileType !== "ADM" && profile?.ProfileType !== ProfileTypeEnum.ADM.toString())) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <h2 className="text-xl font-bold text-red-500">Acesso restrito: apenas administradores podem acessar esta página.</h2>
-      </div>
+      router.replace("/auth")
     )
   }
 
