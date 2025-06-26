@@ -10,8 +10,9 @@ import TaskDetailsPanel from "@/components/task-details-panel"
 import BpmnTaskList from "@/components/bpmn-task-list"
 import { ArrowLeft, Edit, FileText, ListChecks, Users, Info } from "lucide-react"
 import Link from "next/link"
-import AddUserModal from "@/components/add-user-modal"
+//import AddUserModal from "@/components/add-user-modal"
 import { apiClient } from "@/lib/api-client"
+import { use } from "react"
 
 interface ProcessoData {
   id: string
@@ -153,7 +154,7 @@ const fetchPools = async (processId: string): Promise<string[]> => {
   }
 }
 
-export default function ProcessoDetailsPage({ params }: { params: { id: string } }) {
+export default function ProcessoDetailsPage({ params }: { params: any }) {
   const [processo, setProcesso] = useState<Processo | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>("diagrama")
@@ -164,6 +165,7 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
   const [showAddUserModal, setShowAddUserModal] = useState(false)
   const [selectedEtapa, setSelectedEtapa] = useState<{ id: string, nome: string } | null>(null)
   const [pools, setPools] = useState<string[]>([])
+  const resolvedParams = use(params) as { id: string }
 
   const etapas = tasks.map(task => ({
     id: task.id,
@@ -191,14 +193,14 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
 
   useEffect(() => {
     setLoading(true)
-    fetchProcessoById(params.id)
+    fetchProcessoById(resolvedParams.id)
       .then((data) => {
         setProcesso(data)
         setCurrentXml(data.xml)
       })
       .catch(() => setError("Erro ao carregar processo"))
       .finally(() => setLoading(false))
-  }, [params.id])
+  }, [resolvedParams.id])
 
 
   if (loading) return <div className="p-6">Carregando...</div>
@@ -252,55 +254,6 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Coluna da esquerda: ProcessDetails + Tarefas do Processo */}
-        {/* <div className="lg:col-span-1 flex flex-col gap-6">
-          <ProcessDetails processo={processo} />
-
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Tarefas do Processo</h2>
-            </div>
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {tasks.map((task) => (
-                <li
-                  key={task.id}
-                  className={`p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${
-                    selectedTaskId === task.id ? "bg-blue-50 dark:bg-blue-900" : ""
-                  }`}
-                  onClick={() => handleTaskSelect(task.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          task.details.progress >= 100
-                            ? "bg-green-500"
-                            : task.details.progress > 0
-                            ? "bg-blue-500"
-                            : "bg-gray-300 dark:bg-gray-700"
-                        } mr-3`}
-                      ></div>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{task.name}</span>
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">{task.details.progress}%</div>
-                  </div>
-                  {task.assignee && (
-                    <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
-                      <div className="relative w-5 h-5 rounded-full overflow-hidden mr-2">
-                        <img
-                          src={task.assignee.photoUrl || "/placeholder.svg"}
-                          alt={task.assignee.name}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                      <span className="dark:text-gray-200">{task.assignee.name}</span>
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div> */}
 
         {/* Coluna da direita: Diagrama e abas */}
         <div className="lg:col-span-4 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 overflow-hidden h-full min-h-0 flex flex-col">
@@ -328,17 +281,6 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
                 <ListChecks size={16} />
                 Tarefas
               </button>
-              {/* <button
-                onClick={() => setActiveTab("acompanhamento")}
-                className={`px-4 py-3 text-sm font-medium flex items-center gap-2 ${
-                  activeTab === "acompanhamento"
-                    ? "border-b-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                <Users size={16} />
-                Acompanhamento
-              </button> */}
               {selectedTask && (
                 <button
                   onClick={() => setActiveTab("detalhes")}
@@ -357,9 +299,9 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
 
           <div className="flex-1 min-h-0">
             {activeTab === "diagrama" && !isEditing && (
-              <div className="w-full h-full min-h-[500px] flex-1">
-                <BpmnViewer xml={processo.xml} onTaskClick={handleTaskClick} />
-              </div>
+              <div className="w-full h-[70vh] flex-1 min-h-0"> {/* altura dinâmica maior */}
+                  <BpmnViewer xml={processo.xml} onTaskClick={handleTaskClick} />
+                </div>
             )}
 
             {activeTab === "diagrama" && isEditing && (
@@ -377,14 +319,14 @@ export default function ProcessoDetailsPage({ params }: { params: { id: string }
           </div>
         </div>
       </div>
-      <AddUserModal
+      {/* <AddUserModal
         isOpen={showAddUserModal}
         onClose={() => setShowAddUserModal(false)}
         etapas={selectedEtapa ? [selectedEtapa] : etapas}
         onAddUser={handleAddUser}
         pools={pools}
         processInstanceId={processo?.id || ""}
-      />
+      /> */}
     </div>
   )
 }

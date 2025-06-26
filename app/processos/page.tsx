@@ -7,6 +7,8 @@ import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useProfile } from "@/components/profile-context"
 import { apiClient } from "@/lib/api-client"
+import { useRouter } from "next/navigation"
+import React from "react"
 
 type Processo = {
   id: string
@@ -28,6 +30,13 @@ export default function ProcessosPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { profile } = useProfile()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && (!profile || profile.ProfileType !== "ProcessManager")) {
+      router.replace("/auth")
+    }
+  }, [profile, loading, router])
 
   useEffect(() => {
     if (!profile?.Id) return
@@ -38,6 +47,15 @@ export default function ProcessosPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [profile])
+
+
+  useEffect(() => {
+    setLoading(true)
+    apiClient.get<Processo[]>(`/api/Bpmn`)
+      .then(setProcessos)
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   useEffect(() => {
     apiClient.get<any[]>("/api/BpmnProcessInstances")

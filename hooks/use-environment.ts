@@ -26,10 +26,10 @@ export const useEnvironment = () => {
     // Funções utilitárias
     logEnvironment: () => {
       if (isDevelopment()) {
-        console.log('Ambiente de Desenvolvimento');
-        console.log('API URL:', getApiUrl());
-        console.log('App:', config.appName, 'v' + config.appVersion);
-        console.log('Configurações da API:', getApiConfig());
+        // console.log('Ambiente de Desenvolvimento');
+        // console.log('API URL:', getApiUrl());
+        // console.log('App:', config.appName, 'v' + config.appVersion);
+        // console.log('Configurações da API:', getApiConfig());
       }
     },
     

@@ -55,7 +55,6 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
   const [errors, setErrors] = useState<{ etapa?: string; usuario?: string }>({})
   const [responsaveisPorTask, setResponsaveisPorTask] = useState<Record<string, string>>({})
 
-  console.log("selectedUser:", selectedUser, "usuariosDisponiveis:", usuariosDisponiveis);
 
   // Buscar usuários da API ao abrir o modal
   useEffect(() => {
@@ -98,12 +97,8 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
 
 // Sempre que a etapa mudar, defina o usuário já vinculado como selecionado
   useEffect(() => {
-    console.log("Responsáveis por task:", responsaveisPorTask)
-    console.log("Etapa selecionada:", selectedEtapa)
-    console.log("responsaveisPorTask[selectedEtapa]:", responsaveisPorTask[selectedEtapa])
     if (selectedEtapa && responsaveisPorTask[selectedEtapa]) {
       const userId = responsaveisPorTask[selectedEtapa]
-      console.log("User ID vinculado:", userId)
       const user = usuariosDisponiveis.find(u => String(u.id).toLowerCase() === String(userId).toLowerCase())
       setFilteredUsers(user ? [user] : [])
     } else {
@@ -136,7 +131,6 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
       await apiClient.put(`/api/tasks/unassign-user/${taskId}`)
       setSelectedUser("")
     } catch (error) {
-      console.error("Erro ao desvincular usuário:", error)
     }
   }
 

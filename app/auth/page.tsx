@@ -14,6 +14,10 @@ import { Eye, EyeOff, Mail, Lock, User, Building, ArrowRight, Github, Chrome } f
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useProfile } from "@/components/profile-context"
+import { apiClient } from "@/lib/api-client"
+import { toast } from "@/components/ui/use-toast"
+import { useEffect } from "react"
+import { ProfileTypeEnum } from "@/components/Enum/ProfileTypeEnum"
 
 export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -21,6 +25,7 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { setProfile } = useProfile()
+  const { profile } = useProfile()
 
   const [loginForm, setLoginForm] = useState({
     email: "",
@@ -29,49 +34,192 @@ export default function AuthPage() {
   })
 
   const [registerForm, setRegisterForm] = useState({
-    name: "",
+    userName: "",
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "",
-    department: "",
+    profileType: "",
     acceptTerms: false,
   })
+
+  useEffect(() => {
+    console.log(profile?.ProfileType)
+    console.log(ProfileTypeEnum.Employee.toString())
+    if (profile && profile.ProfileType) {
+      if (profile.ProfileType === "ADM") {
+        router.replace("/admin")
+      } else if (profile.ProfileType === "ProcessManager") {
+        router.replace("/processos")
+      } else if (profile.ProfileType === "Employee") {
+        router.replace("/my-tasks")
+      } else {
+        console.log("aqui")
+        router.replace("/")
+      }
+    }
+  }, [profile, router])
+
+  // Função utilitária para extrair ProfileType do token JWT
+  function getProfileTypeFromToken(token: string): string | undefined {
+    try {
+      const payload = token.split('.')[1]
+      // Corrige padding do base64url
+      let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      while (base64.length % 4 !== 0) base64 += "=";
+      const decodedStr = atob(base64)
+      const decoded = JSON.parse(decodedStr)
+      // Tenta diferentes variações de nome do campo
+      const profileType = decoded.ProfileType || decoded.profileType || decoded.role || decoded.perfil || decoded.perfilType
+      return profileType
+    } catch (err) {
+      return undefined
+    }
+  }
+
+  // Função utilitária para extrair o payload decodificado inteiro do token JWT
+  function getDecodedPayloadFromToken(token: string): any {
+    try {
+      const payload = token.split('.')[1]
+      let base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+      while (base64.length % 4 !== 0) base64 += "=";
+      const decodedStr = atob(base64)
+      return JSON.parse(decodedStr)
+    } catch (err) {
+      return {}
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simular autenticação
-    setTimeout(() => {
-      // Definir perfil baseado no email (simulação)
-      if (loginForm.email.includes("analista")) {
-        setProfile("analista")
-      } else {
-        setProfile("colaborador")
+    try {
+      // Requisição real para o endpoint de login
+      const response = await apiClient.post("/api/auth/login", {
+        email: loginForm.email,
+        password: loginForm.password,
+      })
+      // Resposta tem token na raiz, não em data
+      const token = (response as { token: string }).token
+      if (!token) {
+        throw new Error("Token não encontrado na resposta do login.")
       }
-
+      // Salvar token (exemplo: localStorage)
+      localStorage.setItem("token", token)
+      // Buscar perfil do usuário autenticado somente se houver token
+      if (token) {
+        try {
+          const profileResponse = await (apiClient as any).request("/api/auth/me", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (!profileResponse.ok) {
+            // Se não autorizado ou não encontrado, trata como não logado
+            if ([401, 403, 404].includes(profileResponse.status)) {
+              localStorage.removeItem("userProfile")
+              setProfile({
+                Id: "",
+                UserName: "",
+                email: "",
+                FullName: "",
+                ProfileType: "",
+                Role: "notLoggedIn",
+                IsActive: false,
+                CreatedAt: "", 
+              })
+              setIsLoading(false)
+              toast({
+                title: "Sessão expirada",
+                description: "Faça login novamente.",
+                variant: "destructive",
+              })
+              return
+            }
+            throw new Error("Erro ao buscar perfil do usuário.")
+          }
+          const userProfile = await profileResponse.json()
+          const decoded = getDecodedPayloadFromToken(token)
+          // Mescla o perfil retornado com o payload do token, priorizando dados do backend
+          const mergedProfile = { ...decoded, ...userProfile }
+          localStorage.setItem("userProfile", JSON.stringify(mergedProfile))
+          setProfile(mergedProfile)
+        } catch (profileErr) {
+          // fallback: salva o payload decodificado completo do token
+          const decoded = getDecodedPayloadFromToken(token)
+          localStorage.setItem("userProfile", JSON.stringify(decoded))
+          setProfile(decoded)
+        }
+      }
+      // Extrai o tipo de perfil do token
+      const profileType = getProfileTypeFromToken(token)
+      // Redireciona para admin se for ADM, senão para home
       setIsLoading(false)
-      router.push("/")
-    }, 1500)
+      if (profileType === "ADM") {
+        router.push("/admin")
+      } else if (profileType === "ProcessManager") {
+        router.push("/processos")
+      } else if (profileType === "Employee") {
+        router.push("/my-tasks")
+      } else {
+        router.push("/")
+      }
+    } catch (error: any) {
+      setIsLoading(false)
+      toast({
+        title: "Erro ao fazer login",
+        description: error?.message || "Credenciais inválidas.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simular cadastro
-    setTimeout(() => {
-      // Definir perfil baseado no cargo selecionado
-      if (registerForm.role === "analista") {
-        setProfile("analista")
-      } else {
-        setProfile("colaborador")
-      }
-
+    if (registerForm.password !== registerForm.confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem.",
+        variant: "destructive",
+      })
       setIsLoading(false)
-      router.push("/")
-    }, 2000)
+      return
+    }    try {
+      // Mapear string para valor numérico do enum ProfileTypeEnum
+      const profileTypeMap: Record<string, number> = {
+        "IT": 1,
+        "ProcessManager": 2,
+        "Employee": 3,
+        "ADM": 4
+      }
+      
+      const dto = {
+        UserName: registerForm.fullName,
+        FullName: registerForm.fullName,
+        Email: registerForm.email,
+        Password: registerForm.password,
+        ProfileType: profileTypeMap[registerForm.profileType],
+      }
+      const response = await apiClient.post("/api/auth/register", dto)
+      toast({
+        title: "Sucesso",
+        description: "Usuário registrado com sucesso.",
+      })
+      // Redirecionar ou logar usuário
+      setTimeout(() => {
+        router.push("/auth")
+      }, 1000)
+    } catch (error: any) {
+      toast({
+        title: "Erro ao registrar",
+        description: error?.message || "Não foi possível registrar o usuário.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -212,21 +360,20 @@ export default function AuthPage() {
               <CardContent>
                 <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nome completo</Label>
+                    <Label htmlFor="fullName">Nome completo</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="name"
+                        id="fullName"
                         type="text"
-                        placeholder="Seu nome completo"
+                        placeholder="Seu Nome completo"
                         className="pl-10"
-                        value={registerForm.name}
-                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                        value={registerForm.fullName}
+                        onChange={(e) => setRegisterForm({ ...registerForm, fullName: e.target.value })}
                         required
                       />
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label htmlFor="register-email">Email</Label>
                     <div className="relative">
@@ -301,25 +448,23 @@ export default function AuthPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="terms"
-                      checked={registerForm.acceptTerms}
-                      onCheckedChange={(checked) =>
-                        setRegisterForm({ ...registerForm, acceptTerms: checked as boolean })
-                      }
+                  <div className="space-y-2">
+                    <Label htmlFor="profileType">Tipo de perfil</Label>
+                    <Select
+                      value={registerForm.profileType}
+                      onValueChange={(value) => setRegisterForm({ ...registerForm, profileType: value })}
                       required
-                    />
-                    <Label htmlFor="terms" className="text-sm">
-                      Aceito os{" "}
-                      <Link href="/terms" className="text-primary hover:underline">
-                        termos de uso
-                      </Link>{" "}
-                      e{" "}
-                      <Link href="/privacy" className="text-primary hover:underline">
-                        política de privacidade
-                      </Link>
-                    </Label>
+                    >
+                      <SelectTrigger id="profileType">
+                        <SelectValue placeholder="Selecione o tipo de perfil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="IT">TI</SelectItem>
+                        <SelectItem value="ProcessManager">Gerente de Processos</SelectItem>
+                        <SelectItem value="Employee">Funcionário</SelectItem>
+                        <SelectItem value="ADM">ADM</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>

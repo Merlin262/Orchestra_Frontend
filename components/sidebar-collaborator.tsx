@@ -22,6 +22,7 @@ import {
 import Image from "next/image"
 import { useProfile } from "./profile-context"
 import { apiClient } from "@/lib/api-client"
+import { ProfileTypeEnum } from "./Enum/ProfileTypeEnum"
 
 interface User {
   id: string
@@ -33,8 +34,7 @@ interface User {
 // Wrapper para garantir que só renderiza a sidebar se houver perfil
 export function SidebarWrapper() {
   const { profile } = useProfile()
-  // Não renderiza a sidebar se não houver perfil ou se for notLoggedIn
-  if (!profile || profile.Role === "notLoggedIn") return null
+  if (!profile || profile.Role === "notLoggedIn" || (profile.ProfileType == "ADM" || profile.ProfileType == ProfileTypeEnum.ADM.toString())) return null
   return <SidebarColaborador />
 }
 
@@ -46,9 +46,9 @@ export async function getUserById(id: string): Promise<User> {
   }
 }
 
-export default function SidebarColaborador() {
+function SidebarColaborador() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(true)
   const { profile } = useProfile()
   const [analystName, setAnalystName] = useState<string>("")
 
@@ -62,7 +62,8 @@ export default function SidebarColaborador() {
     fetchAnalyst()
   }, [profile])
 
-  const colaboradorMenuItems = [
+
+  const funcionarioMenuItems = [
     { href: "/my-tasks", label: "Minhas Tarefas", icon: <CheckSquare size={20} /> },
     { href: "/assigned-processes", label: "Processos Atribuídos", icon: <Activity size={20} /> },
     { href: "/calendario", label: "Calendário", icon: <Calendar size={20} /> },
@@ -71,7 +72,7 @@ export default function SidebarColaborador() {
     { href: "/ajuda", label: "Ajuda", icon: <HelpCircle size={20} /> },
   ]
 
-  const analistaMenuItems = [
+  const gerenteMenuItems = [
     { href: "/processos", label: "Todos os Processos", icon: <FileText size={20} /> },
     { href: "/processos/novo", label: "Novo Processo", icon: <PlusCircle size={20} /> },
     { href: "/analise", label: "Análise de Processos", icon: <BarChart2 size={20} /> },
@@ -82,9 +83,9 @@ export default function SidebarColaborador() {
   ]
 
   const menuItems =
-    profile && profile.Role === "Analyst"
-      ? analistaMenuItems
-      : colaboradorMenuItems
+    profile && profile.ProfileType === "ProcessManager"
+      ? gerenteMenuItems
+      : funcionarioMenuItems
 
   return (
     <aside
@@ -97,21 +98,21 @@ export default function SidebarColaborador() {
               <div className="relative w-8 h-8 rounded-full overflow-hidden mr-2">
                 <Image
                   src={
-                    profile.Role === "Analyst"
+                    profile?.Role === "Analyst"
                       ? "https://randomuser.me/api/portraits/women/68.jpg"
                       : "https://randomuser.me/api/portraits/men/67.jpg"
                   }
-                  alt={profile.FullName}
+                  alt="{profile?.FullName}"
                   fill
                   className="object-cover"
                 />
               </div>
               <div>
                 <p className="text-sm font-medium dark:text-white">
-                  {profile.FullName}
+                  {profile?.FullName}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {profile.Role}
+                  {profile?.Role}
                 </p>
               </div>
             </div>
@@ -167,3 +168,5 @@ export default function SidebarColaborador() {
     </aside>
   )
 }
+
+export default SidebarWrapper

@@ -19,6 +19,9 @@ import Image from "next/image"
 import { useProfile } from "@/components/profile-context"
 import { useEffect } from "react"
 import { apiClient } from "@/lib/api-client"
+import React from "react"
+import { useRouter } from "next/navigation"
+import { ProfileTypeEnum } from "@/components/Enum/ProfileTypeEnum"
 
 // Dados simulados de tarefas atribuídas ao colaborador
 
@@ -213,12 +216,16 @@ export default function MinhasTarefasPage() {
   const [tarefas, setTarefas] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const todasTarefas = [...minhasTarefas, ...tarefas]
+  const router = useRouter()
 
-
+  useEffect(() => {
+      if (!loading && (!profile || profile.ProfileType !== "Employee")) {
+        router.replace("/auth")
+      }
+    }, [profile, loading, router])
 
 
   async function atualizarStatusTarefa(taskId: string, statusId: number) {
-    console.log("aqui")
     try {
       await apiClient.put("/api/Tasks/update-status", {
         TaskId: taskId,
@@ -679,9 +686,6 @@ export default function MinhasTarefasPage() {
                               : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
                           }`}
                           onClick={async () => {
-                            console.log("Aqui")
-                            console.log(tarefa)
-                            console.log(tarefa.statusId)
                             if (tarefa.status === "em_andamento" || tarefa.status === 1) {
                               await atualizarStatusTarefa(tarefa.id, 2); // 2 = Finished
                             } else if (tarefa.status === 3 || tarefa.status === "pendente") {

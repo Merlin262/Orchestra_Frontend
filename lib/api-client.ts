@@ -36,12 +36,7 @@ class ApiClient {
     const finalOptions = { ...defaultOptions, ...options };
 
     // Log da requisição apenas em desenvolvimento
-    if (isDevelopment()) {
-      console.log(`🌐 API Request: ${finalOptions.method || 'GET'} ${url}`);
-      if (finalOptions.body) {
-        console.log('📦 Request Body:', finalOptions.body);
-      }
-    }
+
 
     try {
       const response = await fetch(url, finalOptions);
@@ -52,19 +47,8 @@ class ApiClient {
 
       const data = await response.json();
 
-      // Log da resposta apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.log(`✅ API Response: ${response.status} ${url}`);
-        console.log('📦 Response Data:', data);
-      }
-
       return data;
     } catch (error) {
-      // Log do erro apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.error(`❌ API Error: ${finalOptions.method || 'GET'} ${url}`);
-        console.error('🚨 Error:', error);
-      }
       throw error;
     }
   }
@@ -74,11 +58,6 @@ class ApiClient {
    */
   async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this._baseUrl}${endpoint}`;
-    
-    // Log da requisição apenas em desenvolvimento
-    if (isDevelopment()) {
-      console.log(`🌐 API Upload: POST ${url}`);
-    }
 
     try {
       const response = await fetch(url, {
@@ -92,19 +71,8 @@ class ApiClient {
 
       const data = await response.json();
 
-      // Log da resposta apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.log(`✅ API Upload Response: ${response.status} ${url}`);
-        console.log('📦 Response Data:', data);
-      }
-
       return data;
     } catch (error) {
-      // Log do erro apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.error(`❌ API Upload Error: POST ${url}`);
-        console.error('🚨 Error:', error);
-      }
       throw error;
     }
   }
@@ -158,4 +126,4 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 // Exporta também a classe para casos onde você precisa de múltiplas instâncias
-export { ApiClient }; 
+export { ApiClient };

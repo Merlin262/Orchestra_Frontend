@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import BpmnAvatarOverlay from "./BpmnAvatarOverlay"
+//import BpmnAvatarOverlay from "./BpmnAvatarOverlay"
 import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
 import { Maximize2, Minimize2 } from "lucide-react"
 
@@ -160,14 +160,14 @@ export default function BpmnViewer({ xml, onTaskClick, instanceTasks = [] }: Bpm
       {/* Container do Diagrama */}
       <div ref={containerRef} className="w-full h-full" />
 
-      {/* Overlay */}
+      {/* Overlay
       {isLoaded && viewerRef.current && (
         <BpmnAvatarOverlay
           modeler={viewerRef.current}
           taskId="Id_638789cd-a4f0-4fa8-9165-680794ff9779"
           imageUrl="https://randomuser.me/api/portraits/men/32.jpg"
         />
-      )}
+      )} */}
 
       {/* Spinner */}
       {!isLoaded && (
