@@ -388,11 +388,20 @@ body {
 
 /* Corrige o fundo interno do canvas */
 .bjs-container svg {
+  background-color: #fff;
+}
+
+.dark .bjs-container svg {
   background-color: #1e1e1e;
 }
 
 /* Ajusta a cor do texto dos elementos (labels) */
 .djs-label {
+  fill: #111111 !important; /* preto no modo claro */
+  font-weight: 500;
+}
+
+.dark .djs-label {
   fill: #ffffff !important;
   font-weight: 500;
 }
@@ -493,6 +502,12 @@ body {
 text {
   font-weight: normal !important;
   font-family: Arial, sans-serif !important;
+  fill: #111111 !important; /* preto no modo claro */
+}
+
+.dark .djs-direct-rendered text,
+.dark text {
+  fill: #ffffff !important;
 }
 
 /* Barra de rolagem escura no modo dark */
