@@ -7,11 +7,13 @@ import { apiClient } from "@/lib/api-client"
 
 interface User {
   id: string
-  nome: string
+  userName: string
   email: string
-  cargo: string
-  departamento: string
-  foto: string
+  fullName: string
+  roles: string[]
+  isActive: boolean
+  createdAt: string
+  profileType: number
 }
 
 interface Task {
@@ -55,22 +57,28 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
   const [errors, setErrors] = useState<{ etapa?: string; usuario?: string }>({})
   const [responsaveisPorTask, setResponsaveisPorTask] = useState<Record<string, string>>({})
 
-  console.log("selectedUser:", selectedUser, "usuariosDisponiveis:", usuariosDisponiveis);
 
   // Buscar usuários da API ao abrir o modal
   useEffect(() => {
-    if (isOpen && pools && pools.length > 0) {
-      const params = pools.map(pool => `groupNames=${encodeURIComponent(pool)}`).join("&")
-      apiClient.get<User[]>(`/api/users/ByGroups?${params}`)
-        .then((data) => setUsuariosDisponiveis(data))
-        .catch(() => setUsuariosDisponiveis([]))
-    } else if (isOpen) {
-      // fallback: busca todos se não houver pools
-      apiClient.get<User[]>("/api/users")
-        .then((data) => setUsuariosDisponiveis(data))
+    if (isOpen) {
+      apiClient.get<{ items: User[] }>("/api/users")
+        .then((data) => {
+          const users = data.items || []
+          const mapped = users.map((user) => ({
+            ...user,
+            nome: user.fullName || user.userName || "",
+            email: user.email || "",
+            cargo: user.roles?.[0] || "",
+            departamento: "",
+            //foto: user.foto || "",
+          }))
+          console.log("Usuários retornados da API:", mapped)
+          setUsuariosDisponiveis(mapped)
+        })
         .catch(() => setUsuariosDisponiveis([]))
     }
-  }, [isOpen, pools])
+  }, [isOpen])
+
 
   async function fetchTasksByProcessInstance(processInstanceId: string): Promise<Task[]> {
     if (!processInstanceId) return []
@@ -98,26 +106,29 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
 
 // Sempre que a etapa mudar, defina o usuário já vinculado como selecionado
   useEffect(() => {
-    console.log("Responsáveis por task:", responsaveisPorTask)
-    console.log("Etapa selecionada:", selectedEtapa)
-    console.log("responsaveisPorTask[selectedEtapa]:", responsaveisPorTask[selectedEtapa])
+  // Ensure usuariosDisponiveis is an array before filtering
+    if (!Array.isArray(usuariosDisponiveis)) {
+      setFilteredUsers([])
+      return
+    }
+
     if (selectedEtapa && responsaveisPorTask[selectedEtapa]) {
       const userId = responsaveisPorTask[selectedEtapa]
-      console.log("User ID vinculado:", userId)
       const user = usuariosDisponiveis.find(u => String(u.id).toLowerCase() === String(userId).toLowerCase())
       setFilteredUsers(user ? [user] : [])
     } else {
-      // Caso contrário, filtra normalmente pelo termo de busca
+      // Filter normally by search term
       const filtered = usuariosDisponiveis.filter(
         (user) =>
-          (user.nome ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.fullName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (user.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.cargo ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.departamento ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+          (user.roles[0] ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       )
+      
       setFilteredUsers(filtered)
     }
   }, [searchTerm, usuariosDisponiveis, selectedEtapa, responsaveisPorTask])
+
 
 
   const assignUserToTask = async (taskId: string, userId: string) => {
@@ -136,26 +147,13 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
       await apiClient.put(`/api/tasks/unassign-user/${taskId}`)
       setSelectedUser("")
     } catch (error) {
-      console.error("Erro ao desvincular usuário:", error)
     }
   }
 
   const handleUserSelect = async (userId: string) => {
-  setSelectedUser(userId)
-  // Atribuição via API só deve acontecer no handleSubmit (ao clicar no botão)
-}
-
-  // Filtrar usuários com base no termo de busca
-  useEffect(() => {
-  const filtered = usuariosDisponiveis.filter(
-    (user) =>
-      (user.nome ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.cargo ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.departamento ?? "").toLowerCase().includes(searchTerm.toLowerCase())
-  )
-  setFilteredUsers(filtered)
-}, [searchTerm, usuariosDisponiveis])
+    setSelectedUser(userId)
+    // Atribuição via API só deve acontecer no handleSubmit (ao clicar no botão)
+  }
 
   // Resetar o estado quando o modal é aberto
   useEffect(() => {
@@ -341,21 +339,21 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
                           <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
                             <Image
                               src={user.foto || "/placeholder.svg"}
-                              alt={user.nome}
+                              alt={user.fullName}
                               fill
                               className="object-cover"
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.nome}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.fullName}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                             <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs rounded dark:bg-green-900 dark:text-green-200">
                               Responsável já vinculado a esta etapa
                             </span>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.cargo}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p>
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.roles}</p>
+                            {/* <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p> */}
                           </div>
                         </div>
                         <button
@@ -383,18 +381,18 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
                           <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
                             <Image
                               src={user.foto || "/placeholder.svg"}
-                              alt={user.nome}
+                              alt={user.fullName}
                               fill
                               className="object-cover"
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.nome}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.fullName}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.cargo}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p>
+                            <p className="text-xs font-medium text-gray-900 dark:text-gray-100">{user.roles}</p>
+                            {/* <p className="text-xs text-gray-500 dark:text-gray-400">{user.departamento}</p> */}
                           </div>
                         </div>
                       </li>

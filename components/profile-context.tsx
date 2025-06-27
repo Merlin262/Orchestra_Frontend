@@ -1,85 +1,85 @@
 "use client"
 
+import { apiClient } from "@/lib/api-client"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 
-type ProfileType =
+type Profile =
   {
     Id: string
     UserName: string
-    Email: string
+    email: string
     FullName: string
+    ProfileType: string
     Role: string
-    IsActive: number
+    IsActive: boolean
     CreatedAt: string
-    UserGroupId: number
   }
 
-export const defaultProfile: ProfileType = {
-  Id: "",
-  UserName: "",
-  Email: "",
-  FullName: "",
-  Role: "notLoggedIn",
-  IsActive: 0,
-  CreatedAt: "",
-  UserGroupId: 0,
-}
-
-export const analystProfile: ProfileType = {
-  Id: "0ABAB41F-3CE5-4B45-BF87-8EDD406A9AD3",
-  UserName: "alicej",
-  Email: "alice.johnson@example.com",
-  FullName: "Alice Johnson",
-  Role: "Analyst",
-  IsActive: 0,
-  CreatedAt: "2025-05-20 18:47:58.3500000",
-  UserGroupId: 1,
-}
-
-export const developerProfile: ProfileType = {
-  Id: "42A6FE9D-E922-4AC9-9BFF-C16880AC5C86",
-  UserName: "mikeb",
-  Email: "mike.brown@example.com",
-  FullName: "Mike Brown",
-  Role: "Developer",
-  IsActive: 1,
-  CreatedAt: "2025-05-20 18:47:58.3500000",
-  UserGroupId: 2,
-}
-
 interface ProfileContextType {
-  profile: ProfileType
-  setProfile: (profile: ProfileType) => void
+  profile: Profile | null
+  setProfile: (profile: Profile | null) => void
+  loading: boolean // Adicione o estado de loading aqui
 }
 
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const [profile, setProfile] = useState<ProfileType>(defaultProfile)
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
+  useEffect(() => {
+  async function validateProfile() {
     const savedProfile = localStorage.getItem("userProfile")
-    if (savedProfile) {
+    const token = localStorage.getItem("token")
+    if (savedProfile && token) {
       try {
-        setProfile(JSON.parse(savedProfile))
+        const res = await (apiClient as any).request("/api/auth/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        if (res.success && res.data) {
+          const backendProfile = res.data
+          const adaptedProfile = {
+            Id: backendProfile.id,
+            UserName: backendProfile.userName,
+            email: backendProfile.email,
+            FullName: backendProfile.fullName,
+            ProfileType: backendProfile.profileType === 2 ? "ProcessManager" : String(backendProfile.profileType),
+            Role: backendProfile.roles?.[0] ?? "",
+            IsActive: backendProfile.isActive,
+            CreatedAt: backendProfile.createdAt,
+          }
+          setProfile(adaptedProfile)
+        } else {
+          localStorage.removeItem("userProfile")
+          localStorage.removeItem("token")
+          setProfile(null)
+        }
       } catch {
-        setProfile(defaultProfile)
+        setProfile(null)
       }
+    } else {
+      setProfile(null)
     }
     setLoading(false)
-  }, [])
+  }
+  validateProfile()
+}, [])
+
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && profile) {
       localStorage.setItem("userProfile", JSON.stringify(profile))
     }
   }, [profile, loading])
 
   if (loading) return null
 
-  return <ProfileContext.Provider value={{ profile, setProfile }}>{children}</ProfileContext.Provider>
+  return (
+    <ProfileContext.Provider value={{ profile, setProfile, loading }}>
+      {children}
+    </ProfileContext.Provider>
+  )
 }
 
 export function useProfile() {

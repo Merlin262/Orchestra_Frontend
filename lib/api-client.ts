@@ -1,4 +1,11 @@
-import { getApiUrl, getApiConfig, isDevelopment } from '@/lib/config';
+import { getApiUrl, getApiConfig } from '@/lib/config';
+
+/**
+ * Recupera o token de autenticação armazenado localmente
+ */
+function getAuthToken(): string | null {
+  return localStorage.getItem('token');
+}
 
 /**
  * Cliente de API que usa as configurações de ambiente
@@ -18,53 +25,45 @@ class ApiClient {
   }
 
   /**
-   * Faz uma requisição HTTP
+   * Faz uma requisição HTTP com suporte a token de autenticação
    */
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this._baseUrl}${endpoint}`;
-    
-    const defaultOptions: RequestInit = {
-      headers: {
-        ...this.config.headers,
-        ...options.headers,
-      },
+
+    const token = getAuthToken();
+
+    const defaultHeaders: HeadersInit = {
+      ...this.config.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
     };
 
-    const finalOptions = { ...defaultOptions, ...options };
-
-    // Log da requisição apenas em desenvolvimento
-    if (isDevelopment()) {
-      console.log(`🌐 API Request: ${finalOptions.method || 'GET'} ${url}`);
-      if (finalOptions.body) {
-        console.log('📦 Request Body:', finalOptions.body);
-      }
-    }
+    const finalOptions: RequestInit = {
+      ...options,
+      headers: defaultHeaders,
+    };
 
     try {
       const response = await fetch(url, finalOptions);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-
-      // Log da resposta apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.log(`✅ API Response: ${response.status} ${url}`);
-        console.log('📦 Response Data:', data);
+      const text = await response.text();
+      let data = null;
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e) {
+          data = null;
+        }
       }
-
-      return data;
+      return data as T;
     } catch (error) {
-      // Log do erro apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.error(`❌ API Error: ${finalOptions.method || 'GET'} ${url}`);
-        console.error('🚨 Error:', error);
-      }
       throw error;
     }
   }
@@ -74,37 +73,26 @@ class ApiClient {
    */
   async uploadFile<T>(endpoint: string, formData: FormData): Promise<T> {
     const url = `${this._baseUrl}${endpoint}`;
-    
-    // Log da requisição apenas em desenvolvimento
-    if (isDevelopment()) {
-      console.log(`🌐 API Upload: POST ${url}`);
-    }
+    const token = getAuthToken();
+
+    const headers: HeadersInit = token
+      ? { Authorization: `Bearer ${token}` }
+      : {};
 
     try {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
+        headers,
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-
-      // Log da resposta apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.log(`✅ API Upload Response: ${response.status} ${url}`);
-        console.log('📦 Response Data:', data);
-      }
-
       return data;
     } catch (error) {
-      // Log do erro apenas em desenvolvimento
-      if (isDevelopment()) {
-        console.error(`❌ API Upload Error: POST ${url}`);
-        console.error('🚨 Error:', error);
-      }
       throw error;
     }
   }
@@ -158,4 +146,4 @@ class ApiClient {
 export const apiClient = new ApiClient();
 
 // Exporta também a classe para casos onde você precisa de múltiplas instâncias
-export { ApiClient }; 
+export { ApiClient };
