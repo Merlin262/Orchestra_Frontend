@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 //import BpmnAvatarOverlay from "./BpmnAvatarOverlay"
 import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
 import { Maximize2, Minimize2 } from "lucide-react"
+//import minimapModule from "diagram-js-minimap"
 
 interface BpmnViewerProps {
   xml: string
@@ -33,6 +34,9 @@ export default function BpmnViewer({ xml, onTaskClick, instanceTasks = [] }: Bpm
           container: containerRef.current,
           height: "100%",
           width: "100%",
+          // additionalModules: [
+          //   minimapModule
+          // ]
         })
 
         try {

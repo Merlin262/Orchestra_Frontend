@@ -240,17 +240,6 @@ export default function ProcessoDetailsPage({ params }: { params: any }) {
           </Link>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{processo.name}</h1>
         </div>
-        {!isEditing ? (
-          <button
-            onClick={handleEditClick}
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
-          >
-            <Edit size={18} />
-            Editar Processo
-          </button>
-        ) : (
-          <div className="text-sm bg-blue-50 text-blue-700 px-3 py-2 rounded-md">Modo de edição ativo</div>
-        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
