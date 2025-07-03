@@ -391,9 +391,11 @@ body {
   background-color: #fff;
 }
 
-.dark .bjs-container svg {
+
+ /* fundo preto no bpmn viwer*/
+/* .dark .bjs-container svg {
   background-color: #1e1e1e;
-}
+} */
 
 /* Ajusta a cor do texto dos elementos (labels) */
 .djs-label {

@@ -12,6 +12,8 @@ import { ArrowLeft, Edit, FileText, ListChecks, Users, Info } from "lucide-react
 import Link from "next/link"
 import AddUserModal from "@/components/add-user-modal"
 import { apiClient } from "@/lib/api-client"
+import { useProcessInstanceSignalR } from "@/hooks/useProcessInstanceSignalR";
+import { TaskStatusEnum } from "@/components/Enum/TaskStatusEnum";
 
 interface ProcessoData {
   id: string
@@ -31,32 +33,25 @@ type Processo = {
   xml: string
 }
 
-const assignees = [
-  {
-    id: "1",
-    name: "João Silva",
-    taskId: "Task_1",
-    taskName: "Analisar Solicitação",
-    status: "active" as const,
-    photoUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-  },
-  {
-    id: "2",
-    name: "Maria Oliveira",
-    taskId: "Task_2",
-    taskName: "Processar Aprovação",
-    status: "pending" as const,
-    photoUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-  },
-  {
-    id: "3",
-    name: "Carlos Santos",
-    taskId: "Task_3",
-    taskName: "Notificar Rejeição",
-    status: "pending" as const,
-    photoUrl: "https://randomuser.me/api/portraits/men/67.jpg",
-  },
-]
+type Task = {
+  taskId: string,
+  name: string
+  completed: boolean,
+  statusId: TaskStatusEnum,
+  createdAt: string,
+  completedAt?: string,
+  comments?: string,
+  responsibleUser? : User
+}
+
+type User = {
+  id: string,
+  userName: string,
+  email: string,
+  fullName: string,
+  role?: string
+}
+
 
 type Tab = "diagrama" | "tarefas" | "acompanhamento" | "detalhes"
 
@@ -99,6 +94,7 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
   const [selectedEtapa, setSelectedEtapa] = useState<{ id: string, nome: string } | null>(null)
   const [pools, setPools] = useState<string[]>([])
   const [instanceTasks, setInstanceTasks] = useState<any[]>([]);
+  const [assignees, setAssignees] = useState<any[]>([]);
   const resolvedParams = use(params)
 
   const etapas = instanceTasks.map(task => ({
@@ -112,14 +108,34 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
     apiClient.get<any[]>(`/api/BpmnProcessInstances/${resolvedParams.id}/tasks`)
       .then(setInstanceTasks)
       .catch(err => setError(err.message));
+
+    // Busca as tasks com usuários e status para acompanhamento
+    apiClient.get<any[]>(`/api/BpmnProcessInstances/${resolvedParams.id}/tasks-with-users-status`)
+      .then((data) => {
+        // Mapear para o tipo Task
+        const mapped: Task[] = data.map(item => ({
+          taskId: item.taskId,
+          name: item.name,
+          completed: item.completed ?? false,
+          statusId: item.statusId as TaskStatusEnum,
+          createdAt: item.createdAt ?? '',
+          completedAt: item.completedAt,
+          comments: item.comments,
+          responsibleUser: item.responsibleUser
+        }));
+        setAssignees(mapped);
+      })
+      .catch(() => setAssignees([]));
   }, [resolvedParams.id]);
 
-  useEffect(() => {
-    apiClient.get<any>(`/api/BpmnProcessInstances/${id}`)
-      .then(setInstancia)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [id])
+  useProcessInstanceSignalR(({ taskId, statusId }) => {
+    console.log("Sinal recebido do SignalR: TaskStatusUpdated", { taskId, statusId });
+    setInstanceTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.xmlTaskId === taskId ? { ...task, statusId: Number(statusId) } : task
+      )
+    );
+  });
 
   useEffect(() => {
     if (showAddUserModal && processo?.id) {
@@ -153,7 +169,7 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
   if (loading) return <div className="p-6">Carregando...</div>
   if (error || !processo) return <div className="p-6 text-red-500">{error || "Processo não encontrado"}</div>
 
-  const currentAssignee = assignees.find((a) => a.status === "active")
+  const currentAssignee = assignees.find((a) => a.statusId === 1)
 
   const handleSaveChanges = (xml: string) => {
     // Aqui você implementaria a lógica para salvar as alterações no backend
@@ -178,7 +194,10 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
     <div className="h-screen flex flex-col p-6">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
-          <Link href="/processos" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900">
+          <Link
+            href="/processos"
+            className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+          >
             <ArrowLeft size={18} />
             Voltar
           </Link>

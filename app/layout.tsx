@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar"
 import { SidebarWrapper } from "@/components/sidebar-collaborator"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ProfileProvider } from "@/components/profile-context"
+import { SignalRProvider } from "@/app/SignalRProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,17 +26,19 @@ export default function RootLayout({
         <link rel="icon" href="/Orchestra_logo.png" type="image/jpeg" />
       </head>
       <body className={inter.className}>
-        <ThemeProvider>
-          <ProfileProvider>
-            <div className="min-h-screen bg-background text-foreground">
-              <Navbar />
-              <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-                <SidebarWrapper />
-                <main className="flex-1 p-4">{children}</main>
+        <SignalRProvider>
+          <ThemeProvider>
+            <ProfileProvider>
+              <div className="min-h-screen bg-background text-foreground">
+                <Navbar />
+                <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
+                  <SidebarWrapper />
+                  <main className="flex-1 p-4">{children}</main>
+                </div>
               </div>
-            </div>
-          </ProfileProvider>
-        </ThemeProvider>
+            </ProfileProvider>
+          </ThemeProvider>
+        </SignalRProvider>
       </body>
     </html>
   )

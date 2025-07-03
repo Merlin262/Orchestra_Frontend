@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
 import { Maximize2, Minimize2 } from "lucide-react"
 //import minimapModule from "diagram-js-minimap"
+import { TaskStatusEnum } from "./Enum/TaskStatusEnum"
 
 interface BpmnViewerProps {
   xml: string
@@ -47,21 +48,20 @@ export default function BpmnViewer({ xml, onTaskClick, instanceTasks = [] }: Bpm
           canvas.zoom("fit-viewport", "auto")
 
           // Mapeamento das tasks da instância para facilitar busca por xmlTaskId
-          const statusByXmlTaskId: Record<string, number> = {}
+          const statusByXmlTaskId: Record<string, number> = {};
           if (Array.isArray(instanceTasks)) {
             instanceTasks.forEach((t) => {
-              if (t.xmlTaskId) statusByXmlTaskId[t.xmlTaskId] = t.statusId
-            })
+              if (t.xmlTaskId) statusByXmlTaskId[t.xmlTaskId] = t.statusId;
+            });
           }
 
           elementRegistry.getAll().forEach((element: any) => {
             const type = element?.businessObject?.$type
             // Se for uma task, verifica se existe status especial
             if (type === "bpmn:Task" && element.id && statusByXmlTaskId[element.id] !== undefined) {
-              // Verde se statusId === 2, azul se statusId === 3, cinza caso contrário
-              if (statusByXmlTaskId[element.id] === 2) {
+              if (statusByXmlTaskId[element.id] === TaskStatusEnum.Finished) {
                 canvas.addMarker(element.id, "highlight-green")
-              } else if (statusByXmlTaskId[element.id] === 3) {
+              } else if (statusByXmlTaskId[element.id] === TaskStatusEnum.InProgress) {
                 canvas.addMarker(element.id, "highlight-blue")
               } else {
                 canvas.addMarker(element.id, "highlight-gray")

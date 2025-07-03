@@ -23,42 +23,39 @@ import React from "react"
 import { useRouter } from "next/navigation"
 import { ProfileTypeEnum } from "@/components/Enum/ProfileTypeEnum"
 
-// Dados simulados de tarefas atribuídas ao colaborador
-
 export enum TaskStatus {
-  InProgress = 1,
-  Finished = 2,
-  NotStarted = 3,
+  NotStarted = 1,
+  InProgress = 2,
+  Finished = 3,
+  Late = 4
 }
 
-//const minhasTarefas = []
-
 // Componente para exibir o status da tarefa
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({ status }: { status: TaskStatus }) => {
   const statusConfig = {
-    pendente: {
+    [TaskStatus.NotStarted]: {
       bg: "bg-yellow-100 dark:bg-yellow-900",
       text: "text-yellow-800 dark:text-yellow-200",
       label: "Pendente",
     },
-    em_andamento: {
+    [TaskStatus.InProgress]: {
       bg: "bg-blue-100 dark:bg-blue-900",
       text: "text-blue-800 dark:text-blue-200",
       label: "Em andamento",
     },
-    concluida: {
+    [TaskStatus.Finished]: {
       bg: "bg-green-100 dark:bg-green-900",
       text: "text-green-800 dark:text-green-200",
       label: "Concluída",
     },
-    atrasada: {
+    [TaskStatus.Late]: {
       bg: "bg-red-100 dark:bg-red-900",
       text: "text-red-800 dark:text-red-200",
       label: "Atrasada",
     },
   }
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pendente
+  const config = statusConfig[status] || statusConfig[TaskStatus.NotStarted]
 
   return (
     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>{config.label}</span>
@@ -108,7 +105,6 @@ export default function MinhasTarefasPage() {
   const router = useRouter()
 
   useEffect(() => {
-    console.log("Profile:", profile)
       if (!profile || (profile.ProfileType !== "Employee" && profile?.ProfileType !== ProfileTypeEnum.Employee.toString())) {
         router.replace("/auth")
       }
@@ -122,39 +118,38 @@ export default function MinhasTarefasPage() {
         StatusId: statusId
       });
       
-      // Atualize o estado local para refletir o novo status
       setTarefaDetalhada((prev: any) =>
-        prev
-          ? {
-              ...prev,
-              status:
-                statusId === 1
-                  ? "em_andamento"
-                  : statusId === 2
-                  ? "concluida"
-                  : statusId === 3
-                  ? "pendente"
-                  : prev.status,
-            }
-          : prev
-      );
+      prev
+        ? {
+            ...prev,
+            status:
+              statusId === TaskStatus.InProgress
+                ? TaskStatus.InProgress
+                : statusId === TaskStatus.Finished
+                ? TaskStatus.Finished
+                : statusId === TaskStatus.NotStarted
+                ? TaskStatus.NotStarted
+                : prev.status,
+          }
+        : prev
+    );
       setTarefas((prev) =>
-        prev.map((t) =>
-          t.id === taskId
-            ? {
-                ...t,
-                status:
-                  statusId === 1
-                    ? "em_andamento"
-                    : statusId === 2
-                    ? "concluida"
-                    : statusId === 3
-                    ? "pendente"
-                    : t.status,
-              }
-            : t
-        )
-      );
+      prev.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              status:
+                statusId === TaskStatus.InProgress
+                  ? TaskStatus.InProgress
+                  : statusId === TaskStatus.Finished
+                  ? TaskStatus.Finished
+                  : statusId === TaskStatus.NotStarted
+                  ? TaskStatus.NotStarted
+                  : t.status,
+            }
+          : t
+      )
+    );
     } catch (error) {
       console.error("Erro ao atualizar status da tarefa:", error);
     }
@@ -166,7 +161,6 @@ export default function MinhasTarefasPage() {
     setLoading(true)
     apiClient.get<any[]>(`/api/Tasks/user-process-instances/${profile.Id}`)
       .then((data: any[]) => {
-        // Transforme os dados do backend para o formato esperado pelo front
         const tarefasTransformadas = data.flatMap((proc: any) =>
           (proc.tasks || []).map((t: any) => ({
             id: t.taskId,
@@ -178,7 +172,7 @@ export default function MinhasTarefasPage() {
             prazo: t.completedAt ? new Date(t.completedAt).toLocaleDateString() : "",
             dataInicio: t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "",
             prioridade: "média",
-            status: t.statusId,
+            status: t.statusId as TaskStatus,
             progresso: t.completed ? 100 : 0,
             responsavel: t.responsibleUser
               ? {
@@ -203,7 +197,7 @@ export default function MinhasTarefasPage() {
   // Filtrar tarefas com base nos filtros selecionados
   const tarefasFiltradas = todasTarefas.filter((tarefa) => {
     // Filtro por status
-    if (filtroStatus !== "todos" && tarefa.status !== filtroStatus) {
+    if (filtroStatus !== "todos" && tarefa.status !== Number(filtroStatus)) {
       return false
     }
 
@@ -247,10 +241,10 @@ export default function MinhasTarefasPage() {
   // Calcular o número de tarefas por status
   const contadorStatus = {
     total: todasTarefas.length,
-    pendente: todasTarefas.filter((t) => t.status === "pendente").length,
-    em_andamento: todasTarefas.filter((t) => t.status === "em_andamento").length,
-    concluida: todasTarefas.filter((t) => t.status === "concluida").length,
-    atrasada: todasTarefas.filter((t) => t.status === "atrasada").length,
+    NotStarted: todasTarefas.filter((t) => t.status === TaskStatus.NotStarted).length,
+    InProgress: todasTarefas.filter((t) => t.status === TaskStatus.InProgress).length,
+    Finished: todasTarefas.filter((t) => t.status === TaskStatus.Finished).length,
+    Late: todasTarefas.filter((t) => t.status === TaskStatus.Late).length,
   }
 
   return (
@@ -285,7 +279,7 @@ export default function MinhasTarefasPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Pendentes</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.pendente}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.NotStarted}</p>
             </div>
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-full">
               <Clock size={24} className="text-yellow-600 dark:text-yellow-400" />
@@ -297,7 +291,7 @@ export default function MinhasTarefasPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Em Andamento</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.em_andamento}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.InProgress}</p>
             </div>
             <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-full">
               <Clock size={24} className="text-blue-600 dark:text-blue-400" />
@@ -309,7 +303,7 @@ export default function MinhasTarefasPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Concluídas</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.concluida}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.Finished}</p>
             </div>
             <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
               <CheckCircle size={24} className="text-green-600 dark:text-green-400" />
@@ -321,7 +315,7 @@ export default function MinhasTarefasPage() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">Atrasadas</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.atrasada}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">{contadorStatus.Late}</p>
             </div>
             <div className="p-2 bg-red-100 dark:bg-red-900 rounded-full">
               <AlertCircle size={24} className="text-red-600 dark:text-red-400" />
@@ -367,10 +361,10 @@ export default function MinhasTarefasPage() {
                 onChange={(e) => setFiltroStatus(e.target.value)}
               >
                 <option value="todos">Todos os status</option>
-                <option value="pendente">Pendente</option>
-                <option value="em_andamento">Em andamento</option>
-                <option value="concluida">Concluída</option>
-                <option value="atrasada">Atrasada</option>
+                <option value={TaskStatus.NotStarted}>Pendente</option>
+                <option value={TaskStatus.InProgress}>Em andamento</option>
+                <option value={TaskStatus.Finished}>Concluída</option>
+                <option value={TaskStatus.Late}>Atrasada</option>
               </select>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Filter size={18} className="text-gray-400 dark:text-gray-500" />
@@ -442,9 +436,9 @@ export default function MinhasTarefasPage() {
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
                       <div
                         className={`h-2.5 rounded-full ${
-                          tarefa.status === "atrasada"
+                          tarefa.status === TaskStatus.Late
                             ? "bg-red-600 dark:bg-red-500"
-                            : tarefa.status === "concluida"
+                            : tarefa.status === TaskStatus.Finished
                               ? "bg-green-600 dark:bg-green-500"
                               : "bg-blue-600 dark:bg-blue-500"
                         }`}
@@ -453,44 +447,12 @@ export default function MinhasTarefasPage() {
                     </div>
 
                     <div className="flex justify-between items-center text-sm">
-                      <div className="flex items-center">
-                        <div className="relative w-6 h-6 rounded-full overflow-hidden mr-2 border border-gray-200 dark:border-gray-600">
-                          <Image
-                            src={tarefa.responsavel.foto || "/placeholder.svg"}
-                            alt={tarefa.responsavel.nome}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <span className="text-gray-700 dark:text-gray-300">{tarefa.responsavel.nome}</span>
-                      </div>
-
-                      {/* <div className="flex items-center gap-4">
-                        <span className="flex items-center">
-                          <MessageSquare size={16} className="mr-1 text-gray-400 dark:text-gray-500" />
-                          {tarefa.comentarios.length}
-                        </span>
-                        <span className="flex items-center">
-                          <CheckCircle size={16} className="mr-1 text-gray-400 dark:text-gray-500" />
-                          {tarefa.subtarefas.filter((st) => st.concluida).length}/{tarefa.subtarefas.length}
-                        </span>
-                      </div> */}
+                      {/* Adicione mais informações se necessário */}
                     </div>
                   </div>
 
                   <div className="flex flex-col items-end ml-4">
-                    <button
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-2"
-                      onClick={() => abrirDetalhesTarefa(tarefa)}
-                    >
-                      <ArrowUpRight size={20} />
-                    </button>
-                    <button
-                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-                      onClick={() => toggleTarefaExpandida(tarefa.id)}
-                    >
-                      {tarefaExpandida === tarefa.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    </button>
+                    {/* Ações rápidas */}
                   </div>
                 </div>
 
@@ -498,96 +460,7 @@ export default function MinhasTarefasPage() {
                 {tarefaExpandida === tarefa.id && (
                   <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        {/* <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Subtarefas</h4>
-                        <ul className="space-y-2">
-                          {tarefa.subtarefas.map((subtarefa) => (
-                            <li key={subtarefa.id} className="flex items-start">
-                              {subtarefa.concluida ? (
-                                <CheckCircle
-                                  size={18}
-                                  className="text-green-500 dark:text-green-400 mt-0.5 mr-2 flex-shrink-0"
-                                />
-                              ) : (
-                                <Circle
-                                  size={18}
-                                  className="text-gray-300 dark:text-gray-600 mt-0.5 mr-2 flex-shrink-0"
-                                />
-                              )}
-                              <span
-                                className={
-                                  subtarefa.concluida
-                                    ? "text-gray-500 dark:text-gray-400 line-through"
-                                    : "text-gray-700 dark:text-gray-300"
-                                }
-                              >
-                                {subtarefa.nome}
-                              </span>
-                            </li>
-                          ))}
-                        </ul> */}
-                      </div>
-
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Comentários Recentes
-                        </h4>
-                        {tarefa.comentarios.length > 0 ? (
-                          <ul className="space-y-2">
-                            {tarefa.comentarios.slice(0, 2).map((comentario, index) => (
-                              <li key={index} className="text-sm">
-                                <div className="flex justify-between">
-                                  <span className="font-medium text-gray-800 dark:text-gray-200">
-                                    {comentario.autor}
-                                  </span>
-                                  <span className="text-gray-500 dark:text-gray-400">{comentario.data}</span>
-                                </div>
-                                <p className="text-gray-600 dark:text-gray-400">{comentario.texto}</p>
-                              </li>
-                            ))}
-                            {tarefa.comentarios.length > 2 && (
-                              <li
-                                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 cursor-pointer"
-                                onClick={() => abrirDetalhesTarefa(tarefa)}
-                              >
-                                Ver todos os {tarefa.comentarios.length} comentários
-                              </li>
-                            )}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum comentário ainda.</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm mr-2"
-                        onClick={() => abrirDetalhesTarefa(tarefa)}
-                      >
-                        Ver Detalhes Completos
-                      </button>
-
-                      {tarefa.status !== "concluida" && (
-                        <button
-                          className={`px-4 py-2 rounded-md text-sm ${
-                            tarefa.status === "em_andamento"
-                              ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white"
-                              : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
-                          }`}
-                          onClick={async () => {
-                            if (tarefa.status === "em_andamento" || tarefa.status === 1) {
-                              await atualizarStatusTarefa(tarefa.id, 2); // 2 = Finished
-                            } else if (tarefa.status === 3 || tarefa.status === "pendente") {
-                              await atualizarStatusTarefa(tarefa.id, 1); // 1 = In Progress
-                            }
-                          }}
-                        >
-                          {tarefa.status === "em_andamento" || tarefa.status === 1
-                            ? "Encerrar tarefa"
-                            : "Iniciar Tarefa"}
-                        </button>
-                      )}
+                      {/* Detalhes adicionais */}
                     </div>
                   </div>
                 )}
@@ -614,11 +487,11 @@ export default function MinhasTarefasPage() {
               <div className="flex items-center gap-3">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    tarefaDetalhada.status === "atrasada"
+                    tarefaDetalhada.status === TaskStatus.Late
                       ? "bg-red-500"
-                      : tarefaDetalhada.status === "concluida"
+                      : tarefaDetalhada.status === TaskStatus.Finished
                         ? "bg-green-500"
-                        : tarefaDetalhada.status === "em_andamento"
+                        : tarefaDetalhada.status === TaskStatus.InProgress
                           ? "bg-blue-500"
                           : "bg-yellow-500"
                   }`}
@@ -740,7 +613,7 @@ export default function MinhasTarefasPage() {
                             className={`h-2.5 rounded-full ${
                               tarefaDetalhada.status === "atrasada"
                                 ? "bg-red-600 dark:bg-red-500"
-                                : tarefaDetalhada.status === "concluida"
+                                : tarefaDetalhada.status === 2
                                   ? "bg-green-600 dark:bg-green-500"
                                   : "bg-blue-600 dark:bg-blue-500"
                             }`}
@@ -946,26 +819,24 @@ export default function MinhasTarefasPage() {
                 </span>
               </div>
               <div className="flex gap-2">
-                {tarefaDetalhada.status !== "concluida" && (
+                {tarefaDetalhada.status !== TaskStatus.Finished && (
                   <button
                     className={`px-4 py-2 rounded-md text-sm ${
-                      tarefaDetalhada.status === "em_andamento"
+                      tarefaDetalhada.status === TaskStatus.NotStarted
                         ? "bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white"
                         : "bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white"
                     }`}
                     onClick={async () => {
-                      if (tarefaDetalhada.status === "em_andamento") {
-                        await atualizarStatusTarefa(tarefaDetalhada.id, 2); // 2 = Finished
-                      } else if (tarefaDetalhada.status === 3 || tarefaDetalhada.status === "pendente") {
-                        await atualizarStatusTarefa(tarefaDetalhada.id, 1); // 1 = In Progress
+                      if (tarefaDetalhada.status === TaskStatus.NotStarted) {
+                        await atualizarStatusTarefa(tarefaDetalhada.id, TaskStatus.InProgress);
+                      } else if (tarefaDetalhada.status === TaskStatus.InProgress) {
+                        await atualizarStatusTarefa(tarefaDetalhada.id, TaskStatus.Finished);
                       }
                     }}
                   >
-                    {tarefaDetalhada.status === "em_andamento"
-                      ? "Marcar como Concluída"
-                      : tarefaDetalhada.status === 3 || tarefaDetalhada.status === "pendente"
-                        ? "Iniciar Tarefa"
-                        : "Iniciar Tarefa"}
+                    {tarefaDetalhada.status === TaskStatus.NotStarted
+                    ? "Iniciar Tarefa"
+                    : "Marcar como Concluída"}
                   </button>
                 )}
                 <button
