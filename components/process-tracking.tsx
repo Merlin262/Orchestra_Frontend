@@ -1,14 +1,15 @@
 "use client"
 import { CheckCircle, Clock, AlertCircle } from "lucide-react"
 import Image from "next/image"
+import { TaskStatusEnum } from "./Enum/TaskStatusEnum"
 
 interface Assignee {
-  id: string
   name: string
   taskId: string
   taskName: string
-  status: "active" | "completed" | "pending"
-  photoUrl?: string
+  statusId: TaskStatusEnum
+  photoUrl?: string,
+  responsibleUser: User
 }
 
 interface ProcessTrackingProps {
@@ -16,71 +17,57 @@ interface ProcessTrackingProps {
   assignees?: Assignee[]
 }
 
+type User = {
+  id: string,
+  userName: string,
+  email: string,
+  fullName?: string,
+  role?: string
+}
+
 export default function ProcessTracking({ xml, assignees = [] }: ProcessTrackingProps) {
-  // Se não houver assignees, criar alguns para demonstração
-  const demoAssignees: Assignee[] = [
-    {
-      id: "1",
-      name: "João Silva",
-      taskId: "Task_1",
-      taskName: "Analisar Solicitação",
-      status: "active",
-      photoUrl: "https://randomuser.me/api/portraits/men/32.jpg",
-    },
-    {
-      id: "2",
-      name: "Maria Oliveira",
-      taskId: "Task_2",
-      taskName: "Processar Aprovação",
-      status: "pending",
-      photoUrl: "https://randomuser.me/api/portraits/women/44.jpg",
-    },
-    {
-      id: "3",
-      name: "Carlos Santos",
-      taskId: "Task_3",
-      taskName: "Notificar Rejeição",
-      status: "pending",
-      photoUrl: "https://randomuser.me/api/portraits/men/67.jpg",
-    },
-  ]
+  const displayAssignees = assignees
 
-  const displayAssignees = assignees.length > 0 ? assignees : demoAssignees
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: TaskStatusEnum) => {
     switch (status) {
-      case "completed":
+      case TaskStatusEnum.Finished:
         return <CheckCircle size={18} className="text-green-500" />
-      case "active":
+      case TaskStatusEnum.InProgress:
         return <Clock size={18} className="text-blue-500" />
-      case "pending":
+      case TaskStatusEnum.NotStarted:
+      case TaskStatusEnum.Late:
         return <AlertCircle size={18} className="text-gray-400" />
       default:
         return <AlertCircle size={18} className="text-gray-400" />
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: TaskStatusEnum) => {
+    console.log("Status:", status)
     switch (status) {
-      case "completed":
+      case TaskStatusEnum.Finished:
         return "Concluído"
-      case "active":
+      case TaskStatusEnum.InProgress:
         return "Em andamento"
-      case "pending":
+      case TaskStatusEnum.NotStarted:
         return "Pendente"
+      case TaskStatusEnum.Late:
+        return "Atrasado"
       default:
-        return "Desconhecido"
+        return "Pendente"
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: TaskStatusEnum) => {
     switch (status) {
-      case "completed":
+      case TaskStatusEnum.Finished:
         return "bg-green-50 text-green-700"
-      case "active":
+      case TaskStatusEnum.InProgress:
         return "bg-blue-50 text-blue-700"
-      case "pending":
+      case TaskStatusEnum.NotStarted:
         return "bg-gray-50 text-gray-500"
+      case TaskStatusEnum.Late:
+        return "bg-red-50 text-red-700"
       default:
         return "bg-gray-50 text-gray-500"
     }
@@ -97,7 +84,7 @@ export default function ProcessTracking({ xml, assignees = [] }: ProcessTracking
 
   <ul className="divide-y divide-gray-200 dark:divide-gray-700">
     {displayAssignees.map((assignee) => (
-      <li key={assignee.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+      <li key={assignee.taskId} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
         <div className="flex items-center">
           <div className="flex-shrink-0">
             {assignee.photoUrl ? (
@@ -122,21 +109,23 @@ export default function ProcessTracking({ xml, assignees = [] }: ProcessTracking
           </div>
           <div className="ml-4 flex-1">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{assignee.name}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{assignee.responsibleUser?.fullName}</p>
               <span
                 className={`px-2 py-1 text-xs rounded-full ${
-                  assignee.status === "completed"
+                  assignee.statusId === TaskStatusEnum.Finished
                     ? "bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300"
-                    : assignee.status === "active"
+                    : assignee.statusId === TaskStatusEnum.InProgress
                     ? "bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
+                    : assignee.statusId === TaskStatusEnum.Late
+                    ? "bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300"
                     : "bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-300"
                 }`}
               >
-                {getStatusText(assignee.status)}
+                {getStatusText(assignee.statusId)}
               </span>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Etapa: <span className="font-medium dark:text-gray-100">{assignee.taskName}</span>
+              Etapa: <span className="font-medium dark:text-gray-100">{assignee.name}</span>
             </p>
           </div>
         </div>

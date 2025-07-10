@@ -131,11 +131,12 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
 
 
 
-  const assignUserToTask = async (taskId: string, userId: string) => {
+  const assignUserToTask = async (taskId: string, userId: string, processInstanceId: string) => {
     try {
       await apiClient.put("/api/tasks/assign-user", {
         TaskId: taskId,
         UserId: userId,
+        ProcessInstanceId: processInstanceId,
       })
     } catch (error) {
       throw new Error("Erro ao atribuir usuário à tarefa")
@@ -183,7 +184,7 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
   // Se não houver erros, adicionar usuário
   if (Object.keys(newErrors).length === 0) {
     try {
-      await assignUserToTask(selectedEtapa, selectedUser)
+      await assignUserToTask(selectedEtapa, selectedUser, processInstanceId)
       onAddUser(selectedEtapa, selectedUser, selectedPapel)
       onClose()
     } catch (error) {

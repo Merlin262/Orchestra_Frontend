@@ -44,8 +44,6 @@ export default function AuthPage() {
   })
 
   useEffect(() => {
-    console.log(profile?.ProfileType)
-    console.log(ProfileTypeEnum.Employee.toString())
     if (profile && profile.ProfileType) {
       if (profile.ProfileType === "ADM") {
         router.replace("/admin")
@@ -54,7 +52,6 @@ export default function AuthPage() {
       } else if (profile.ProfileType === "Employee") {
         router.replace("/my-tasks")
       } else {
-        console.log("aqui")
         router.replace("/")
       }
     }
