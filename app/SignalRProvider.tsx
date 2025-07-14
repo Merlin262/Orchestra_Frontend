@@ -8,6 +8,7 @@ export const SignalRProvider = ({ children }: { children: React.ReactNode }) => 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
 
   useEffect(() => {
+    console.log(process.env.NEXT_PUBLIC_SIGNALR_URL);
     const connection = new signalR.HubConnectionBuilder()
       .withUrl(process.env.NEXT_PUBLIC_SIGNALR_URL as string)
       .withAutomaticReconnect()

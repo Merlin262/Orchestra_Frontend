@@ -42,6 +42,7 @@ type Task = {
   completedAt?: string,
   comments?: string,
   responsibleUser? : User
+  xmlTaskId: string
 }
 
 type User = {
@@ -56,6 +57,7 @@ type User = {
 type Tab = "diagrama" | "tarefas" | "acompanhamento" | "detalhes"
 
 const fetchProcessoById = async (id: string): Promise<Processo> => {
+  console.log("Fetching processo by ID:", id)
   try {
     const data = await apiClient.get<ProcessoData>(`/api/BpmnProcessInstances/${id}`)
     // Adaptar os campos para o formato esperado pelo componente
@@ -91,17 +93,25 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
   const [error, setError] = useState<string | null>(null)
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [showAddUserModal, setShowAddUserModal] = useState(false)
-  const [selectedEtapa, setSelectedEtapa] = useState<{ id: string, nome: string } | null>(null)
+  const [selectedEtapa, setSelectedEtapa] = useState<Task | null>(null)
   const [pools, setPools] = useState<string[]>([])
   const [instanceTasks, setInstanceTasks] = useState<any[]>([]);
   const [assignees, setAssignees] = useState<any[]>([]);
   const resolvedParams = use(params)
 
-  const etapas = instanceTasks.map(task => ({
-    id: task.id,
-    nome: task.name,
-    responsaveis: task.assignee ? [task.assignee] : [],
-  }))
+  const etapas: Task[] = instanceTasks.map(task => {
+    return {
+      taskId: task.taskId ?? task.id,
+      name: task.name,
+      completed: task.completed,
+      statusId: task.statusId,
+      createdAt: task.createdAt,
+      completedAt: task.completedAt,
+      comments: task.comments,
+      responsibleUser: task.responsibleUser,
+      xmlTaskId: task.xmlTaskId,
+    }
+  })
 
   useEffect(() => {
     if (!resolvedParams.id) return;
@@ -121,7 +131,8 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
           createdAt: item.createdAt ?? '',
           completedAt: item.completedAt,
           comments: item.comments,
-          responsibleUser: item.responsibleUser
+          responsibleUser: item.responsibleUser,
+          xmlTaskId: item.xmlTaskId
         }));
         setAssignees(mapped);
       })
@@ -146,8 +157,14 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
   }, [showAddUserModal, processo?.id])
 
   const handleTaskClick = (taskId: string, taskName: string) => {
-    setSelectedEtapa({ id: taskId, nome: taskName })
-    setShowAddUserModal(true)
+    console.log("Tarefa clicada:", taskId, taskName)
+    console.log("Etapas disponíveis:", etapas)
+    const etapa = etapas.find(e => e.xmlTaskId === taskId && e.name === taskName)
+    console.log("Etapa encontrada:", etapa)
+    if (etapa) {
+      setSelectedEtapa(etapa)
+      setShowAddUserModal(true)
+    }
   }
 
   const handleAddUser = (etapaId: string, userId: string, papel: string) => {
@@ -282,7 +299,9 @@ export default function InstanciaDetailsPage({ params }: { params: Promise<{ id:
       <AddUserModal
         isOpen={showAddUserModal}
         onClose={() => setShowAddUserModal(false)}
-        etapas={selectedEtapa ? [selectedEtapa] : etapas}
+        etapas={selectedEtapa 
+          ? etapas.filter(e => e.taskId === selectedEtapa.taskId)
+          : etapas}
         onAddUser={handleAddUser}
         pools={pools}
         processInstanceId={processo.id}

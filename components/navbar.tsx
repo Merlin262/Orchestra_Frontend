@@ -64,13 +64,15 @@ export default function Navbar() {
               <>
                 <ThemeToggle />
                 <div className="flex items-center gap-2">
-                  <Link
-                    href="/auth"
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
-                  >
-                    <LogIn size={16} />
-                    <span className="hidden sm:inline">Entrar</span>
-                  </Link>
+                  {pathname !== "/auth" && (
+                    <Link
+                      href="/auth"
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                    >
+                      <LogIn size={16} />
+                      <span className="hidden sm:inline">Entrar</span>
+                    </Link>
+                  )}
                   {/* <Link
                     href="/auth"
                     className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-colors"

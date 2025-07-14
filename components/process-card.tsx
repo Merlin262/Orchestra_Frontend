@@ -65,7 +65,7 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
         </div>
 
         <div className="mb-4 text-sm">
-          {isBaseline && processo.version && (
+          {processo.version && (
             <div className="text-gray-600 dark:text-gray-300">
               <span className="font-medium">Versão:</span> {processo.version}
             </div>

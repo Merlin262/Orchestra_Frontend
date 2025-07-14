@@ -169,8 +169,8 @@ export default function ProcessoDetailsPage({ params }: { params: any }) {
 
   const etapas = tasks.map(task => ({
     id: task.id,
-    nome: task.name,
-    responsaveis: [], // Array vazio para compatibilidade com o tipo Etapa
+    name: task.name,
+    responsaveis: [], 
   }))
 
   useEffect(() => {

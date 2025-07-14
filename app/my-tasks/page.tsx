@@ -22,6 +22,8 @@ import { apiClient } from "@/lib/api-client"
 import React from "react"
 import { useRouter } from "next/navigation"
 import { ProfileTypeEnum } from "@/components/Enum/ProfileTypeEnum"
+import { getUserIdFromProfile } from "@/app/helpers/getUserIdFromProfile";
+
 
 export enum TaskStatus {
   NotStarted = 1,
@@ -157,9 +159,10 @@ export default function MinhasTarefasPage() {
 
 
   useEffect(() => {
-    if (!profile?.Id) return
+    const userId = getUserIdFromProfile(profile);
+    if (!userId) return
     setLoading(true)
-    apiClient.get<any[]>(`/api/Tasks/user-process-instances/${profile.Id}`)
+    apiClient.get<any[]>(`/api/Tasks/user-process-instances/${userId}`)
       .then((data: any[]) => {
         const tarefasTransformadas = data.flatMap((proc: any) =>
           (proc.tasks || []).map((t: any) => ({
@@ -192,7 +195,7 @@ export default function MinhasTarefasPage() {
         setTarefas([]);
       })
       .finally(() => setLoading(false))
-  }, [profile?.Id])
+  }, [profile])
 
   // Filtrar tarefas com base nos filtros selecionados
   const tarefasFiltradas = todasTarefas.filter((tarefa) => {

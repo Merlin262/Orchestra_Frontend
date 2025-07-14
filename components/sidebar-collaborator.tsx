@@ -90,8 +90,8 @@ function SidebarColaborador() {
   const funcionarioMenuItems = [
     { href: "/my-tasks", label: "Minhas Tarefas", icon: <CheckSquare size={20} /> },
     { href: "/assigned-processes", label: "Processos Atribuídos", icon: <Activity size={20} /> },
-    { href: "/calendario", label: "Calendário", icon: <Calendar size={20} /> },
-    { href: "/equipe", label: "Minha Equipe", icon: <Users size={20} /> },
+    // { href: "/calendario", label: "Calendário", icon: <Calendar size={20} /> },
+    // { href: "/equipe", label: "Minha Equipe", icon: <Users size={20} /> },
     { href: "/configuracoes", label: "Configurações", icon: <Settings size={20} /> },
     { href: "/ajuda", label: "Ajuda", icon: <HelpCircle size={20} /> },
   ]

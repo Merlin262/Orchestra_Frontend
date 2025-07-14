@@ -21,18 +21,21 @@ interface Task {
   responsibleUser?: {
     id: string
   }
+  TaskId?: string
+  name: string
 }
 
-interface Etapa {
-  id: string
-  nome: string
-  responsaveis?: User[]
-}
+// interface Etapa {
+//   id: string
+//   nome: string
+//   responsaveis?: User[]
+//   TaskId?: string
+// }
 
 interface AddUserModalProps {
   isOpen: boolean
   onClose: () => void
-  etapas: Etapa[]
+  etapas: Task[]
   onAddUser: (etapaId: string, userId: string, papel: string) => void
   pools?: string[]
   processInstanceId: string
@@ -56,6 +59,8 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [errors, setErrors] = useState<{ etapa?: string; usuario?: string }>({})
   const [responsaveisPorTask, setResponsaveisPorTask] = useState<Record<string, string>>({})
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [taskInfo, setTaskInfo] = useState<{ TaskId: string }>({ TaskId: "" })
 
 
   // Buscar usuários da API ao abrir o modal
@@ -93,7 +98,6 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
     if (isOpen && processInstanceId) {
       fetchTasksByProcessInstance(processInstanceId)
         .then((tasks: Task[]) => {
-          // Troque de taskId para xmlTaskId
           const mapping: Record<string, string> = {}
           tasks.forEach((task: Task) => {
             mapping[task.xmlTaskId] = task.responsibleUser?.id ?? ""
@@ -158,14 +162,19 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
 
   // Resetar o estado quando o modal é aberto
   useEffect(() => {
-    if (isOpen) {
-      setSearchTerm("")
-      setSelectedEtapa(etapas.length > 0 ? etapas[0].id : "")
-      setSelectedUser("")
-      setSelectedPapel("responsavel")
-      setErrors({})
-    }
-  }, [isOpen, etapas])
+  if (isOpen) {
+    setSearchTerm("")
+    setSelectedEtapa(etapas.length > 0 ? etapas[0].xmlTaskId : "")
+    // Corrigido para pegar o TaskId correto do objeto etapa
+    const etapa = etapas.length > 0 ? etapas[0] : null
+    const taskId = etapa?.taskId || ""
+    setTaskInfo({ TaskId: taskId })
+    console.log("setTaskInfo called with:", { TaskId: taskId }, "Etapa encontrada:", etapa)
+    setSelectedUser("")
+    setSelectedPapel("responsavel")
+    setErrors({})
+  }
+}, [isOpen, etapas])
 
   const handleSubmit = async () => {
   // Validar campos
@@ -186,7 +195,11 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
     try {
       await assignUserToTask(selectedEtapa, selectedUser, processInstanceId)
       onAddUser(selectedEtapa, selectedUser, selectedPapel)
-      onClose()
+      setSuccessMessage("Usuário adicionado com sucesso!")
+      setTimeout(() => {
+        setSuccessMessage(null)
+        onClose()
+      }, 2000)
     } catch (error) {
       setErrors({ ...newErrors, usuario: "Erro ao atribuir usuário à tarefa" })
     }
@@ -209,6 +222,13 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
         </button>
       </div>
 
+      {successMessage && (
+        <div className="mx-6 my-2 p-3 bg-green-100 text-green-800 rounded flex items-center gap-2">
+          <Check size={20} />
+          <span>{successMessage}</span>
+        </div>
+      )}
+
       {/* Conteúdo */}
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">
@@ -228,8 +248,8 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
               >
                 <option value="">Selecione uma etapa</option>
                 {etapas.map((etapa) => (
-                  <option key={etapa.id} value={etapa.id}>
-                    {etapa.nome}
+                  <option key={etapa.taskId} value={etapa.taskId}>
+                    {etapa.name}
                   </option>
                 ))}
               </select>
@@ -338,12 +358,12 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
                       <li key={user.id} className="p-3 bg-blue-50 dark:bg-blue-900 flex items-center justify-between">
                         <div className="flex items-center">
                           <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                            <Image
+                            {/* <Image
                               src={user.foto || "/placeholder.svg"}
                               alt={user.fullName}
                               fill
                               className="object-cover"
-                            />
+                            /> */}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.fullName}</p>
@@ -359,14 +379,22 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
                         </div>
                         <button
                           className="ml-4 px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-                          onClick={() => desvincularUsuario(selectedEtapa)}
+                          onClick={async () => {
+                            console.log("TaskInfo:", taskInfo)
+                            await desvincularUsuario(taskInfo.TaskId)
+                            setSuccessMessage("Usuário desvinculado com sucesso!")
+                            setTimeout(() => {
+                              setSuccessMessage(null)
+                              onClose()
+                            }, 2000)
+                          }}
                         >
                           Desvincular Usuário
                         </button>
                       </li>
                     ))}
                 </ul>
-              ) : (
+            ) : (
                 // Caso não tenha usuário vinculado, mostra a lista normal
                 filteredUsers.length > 0 ? (
                   <ul className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -380,12 +408,12 @@ export default function AddUserModal({ isOpen, onClose, etapas, onAddUser, pools
                       >
                         <div className="flex items-center">
                           <div className="relative w-10 h-10 rounded-full overflow-hidden mr-3">
-                            <Image
+                            {/* <Image
                               src={user.foto || "/placeholder.svg"}
                               alt={user.fullName}
                               fill
                               className="object-cover"
-                            />
+                            /> */}
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.fullName}</p>

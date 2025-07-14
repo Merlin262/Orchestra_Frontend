@@ -33,15 +33,6 @@ export default function LoginPage() {
 
     // Simular autenticação
     setTimeout(() => {
-      // Definir perfil baseado no email (simulação)
-      // if (loginForm.email.includes("analista")) {
-      //   setProfile(analystProfile)
-      //   console.log("Perfil logado:", analystProfile)
-      // } else {
-      //   setProfile(developerProfile)
-      //   console.log("Perfil logado:", developerProfile)
-      // }
-
       setIsLoading(false)
       router.push("/")
     }, 1500)

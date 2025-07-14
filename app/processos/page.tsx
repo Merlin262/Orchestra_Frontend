@@ -141,12 +141,12 @@ export default function ProcessosPage() {
 
             {instanciasProcessos.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {instanciasProcessos.map((processo) => (
-                  <ProcessCard key={processo.id} processo={processo} />
+                {instanciasProcessos.map((processo, idx) => (
+                  <ProcessCard key={processo.id ?? `instancia-${idx}`} processo={processo} />
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg mb-8">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Nenhuma instância de processo encontrada.</p>
               </div>
             )}
