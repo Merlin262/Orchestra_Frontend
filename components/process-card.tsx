@@ -143,7 +143,11 @@ export default function ProcessCard({ processo }: ProcessCardProps) {
             onClick={async () => {
               if (confirm("Tem certeza que deseja excluir este processo?")) {
                 try {
-                  await apiClient.delete(`/api/bpmn/${processo.id}`);
+                  const endpoint =
+                    processo.tipo === "instancia"
+                      ? `/api/BpmnProcessInstances/${processo.id}`
+                      : `/api/bpmn/${processo.id}`;
+                  await apiClient.delete(endpoint);
                   window.location.reload();
                 } catch (error) {
                   alert("Erro ao excluir o processo.");
